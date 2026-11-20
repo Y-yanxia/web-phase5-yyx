@@ -10,7 +10,7 @@
 | 1.1 | 三选一选题（真实小场景） | ✅ | 待办清单 |
 | 1.2 | ≥2 个页面可互跳（Tab 也算） | ✅ | 清单 / AI 助手两个 Tab |
 | 1.3 | 语义化 `header/nav/main/section/footer` | ✅ | `public/index.html` |
-| 1.4 | 375px 响应式、无横向滚动条 | ✅ | `scrollWidth === 375`，`05-mobile-list.png` |
+| 1.4 | 375px 响应式、无横向滚动条 | ✅ | `scrollWidth === 375`，`05-mobile-list.png`；`npm run e2e` 另外断言 320px 也不溢出 |
 | 1.5 | ≥1 处真 JS 交互 | ✅ | Tab 切换、表单校验、筛选、搜索、删除确认 |
 | 1.6 | 图片 ≤300KB/张 | ✅ | 页面无位图，只有内联 SVG，0 请求 |
 | 1.7 | Console 无红 | ✅ | 截图脚本断言，10 张图全程无 error |
@@ -46,6 +46,7 @@
 | 3.4 | 后端地址抽成配置项 | ✅ | `public/config.js` + `?api=` 覆盖 |
 | 3.5 | CORS 在服务端解决 | ✅ | `lib/http.js` |
 | 3.6 | 一次真实 CORS/部署问题记录（贴原文） | ✅ | `docs/incidents.md` 事故 1 + `11-cors-error.png` |
+| 3.7 | 前端端到端冒烟（真浏览器） | ✅ | `npm run e2e`：新增/勾选/搜索/AI 加一条/删除/320px/无报错，9/9 |
 
 ## 任务 4 · 大模型流式对话
 
