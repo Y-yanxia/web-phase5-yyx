@@ -43,6 +43,11 @@ jobs:
         with:
           path: dist
 
+      # 上传完成后 artifact 元数据有最终一致性延迟，立刻部署偶发 "Found 0 artifacts"。
+      # 等 10 秒再部署，把这类偶发失败挡掉。
+      - name: Wait for artifact consistency
+        run: sleep 10
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
