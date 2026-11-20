@@ -1,0 +1,9 @@
+[console.error] Access to fetch at 'http://127.0.0.1:3100/api/items' from origin 'http://127.0.0.1:5055' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+[requestfailed] http://127.0.0.1:3100/api/items :: net::ERR_FAILED
+[console.error] Failed to load resource: net::ERR_FAILED
+[console.error] Access to fetch at 'http://127.0.0.1:3100/api/items/stats' from origin 'http://127.0.0.1:5055' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+[requestfailed] http://127.0.0.1:3100/api/items/stats :: net::ERR_FAILED
+[console.error] Failed to load resource: net::ERR_FAILED
+[console.error] Access to fetch at 'http://127.0.0.1:3100/api/chat/meta' from origin 'http://127.0.0.1:5055' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+[requestfailed] http://127.0.0.1:3100/api/chat/meta :: net::ERR_FAILED
+[console.error] Failed to load resource: net::ERR_FAILED

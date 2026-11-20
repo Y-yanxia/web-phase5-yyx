@@ -1,0 +1,41 @@
+# 证据截图索引
+
+> 全部由 `npm run shots` 自动生成（无头 Edge + puppeteer-core），
+> 同一脚本会断言：Console 无报错、无失败请求、375px 无横向滚动。
+
+| 文件 | 内容 | 对应任务 |
+|---|---|---|
+| `01-desktop-list.png` | 桌面端清单页（1280×860） | 任务 1 |
+| `02-desktop-filter-pending.png` | 点「未完成」筛选后的列表 | 任务 1/3 |
+| `03-ai-tool-call.png` | AI 说「帮我加一条…」→ 工具卡片 + 回复 + 调用记录 | 任务 5（核心证据） |
+| `04-list-after-ai-add.png` | 切回清单，AI 新增的那条真的在里面 | 任务 5/6 |
+| `05-mobile-list.png` | 手机 375×812（DPR 2），无横向滚动条 | 任务 1 |
+| `06-mobile-ai.png` | 手机端 AI 页 | 任务 1/4 |
+| `07-state-loading.png` | loading 态（拦截请求延迟 1.8s 截的） | 任务 3 |
+| `08-state-error.png` | error 态 + 重试按钮（拦截请求 abort） | 任务 3 |
+| `09-api-smoke.png` | 11 条接口的真实状态码/耗时表格 | 任务 2 |
+| `10-404-page.png` | 真 404 页面（HTTP 404，非软跳转） | 任务 1 |
+| `11-cors-error.png` | 跨域被拦：页面进入错误态 | 任务 3（事故 1） |
+| `11-cors-error.log.txt` | 上面那张图对应的 Console 原文 | 任务 3 |
+| `12-cors-fixed.png` | 白名单加上来源后，同一页面恢复正常 | 任务 3 |
+| `api-smoke.txt` | 冒烟测试的纯文本输出（09 的源数据） | 任务 2 |
+
+## 重新生成
+
+```bash
+npm start                 # 一个窗口跑服务（默认 3000，被占就 PORT=3100）
+npm run seed              # 塞演示数据
+npm run smoke             # 出 api-smoke.txt（需服务在跑）
+npm run shots             # 出 01–08、10
+node scripts/render-terminal.mjs docs/evidence/api-smoke.txt docs/evidence/09-api-smoke.png
+```
+
+CORS 那组图的复现步骤：
+
+```bash
+node scripts/static-server.mjs 5055                    # 前端跑在 5055
+# 后端不带 5055 白名单
+node scripts/cors-demo.mjs                             # → 11-cors-error.png
+# 后端 ALLOWED_ORIGINS 加上 5055 重启
+node scripts/cors-demo.mjs "http://127.0.0.1:5055/?api=http://127.0.0.1:3100" "12-cors-fixed.png"
+```

@@ -1,0 +1,24 @@
+# Render Blueprint：New → Blueprint → 选这个仓库，会自动建服务。
+# 文档：https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: onelist-api
+    runtime: node
+    plan: free
+    region: singapore
+    branch: main
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # 前端 Pages 域名。换成你的仓库名对应的地址
+      - key: ALLOWED_ORIGINS
+        value: https://y-yanxia.github.io
+      # 不填也能跑（离线演示模式）；填了就是真模型
+      - key: DEEPSEEK_API_KEY
+        sync: false
+      - key: DEEPSEEK_MODEL
+        value: deepseek-chat

@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>404 · 页面不存在</title>
+    <link rel="icon" href="data:," />
+    <style>
+      :root {
+        --paper: #f6f3ee;
+        --ink: #171a1d;
+        --muted: #71767e;
+        --accent: #e8623c;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        background:
+          radial-gradient(700px 360px at 80% -10%, #fbe6dc 0%, transparent 60%),
+          var(--paper);
+        font-family: "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+        color: var(--ink);
+        text-align: center;
+      }
+      .code {
+        font-size: clamp(64px, 18vw, 120px);
+        line-height: 1;
+        font-weight: 800;
+        letter-spacing: -0.04em;
+        color: var(--accent);
+        margin: 0;
+      }
+      h1 { font-size: 20px; margin: 12px 0 6px; }
+      p { color: var(--muted); margin: 0 0 22px; font-size: 14px; }
+      a {
+        display: inline-block;
+        padding: 10px 20px;
+        border-radius: 10px;
+        background: var(--ink);
+        color: #fff;
+        text-decoration: none;
+        font-size: 14px;
+      }
+      a:hover { background: #000; }
+      code {
+        font-family: Consolas, monospace;
+        background: #fff;
+        border: 1px solid #e6e0d6;
+        border-radius: 6px;
+        padding: 1px 6px;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p class="code">404</p>
+      <h1>这个页面不存在</h1>
+      <p>地址可能拼错了。顺带一提：接口不存在时返回的是 JSON <code>{"code":40400}</code>。</p>
+      <a href="/">回到清单</a>
+    </main>
+  </body>
+</html>

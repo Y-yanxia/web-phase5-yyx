@@ -1,0 +1,25 @@
+{
+  "name": "onelist",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "一句话清单 —— 原生前端 + Express + SQLite + DeepSeek 工具调用的待办清单",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "test": "node tests/api.test.js",
+    "seed": "node scripts/seed.mjs",
+    "smoke": "node scripts/smoke.mjs",
+    "shots": "node scripts/screenshots.mjs",
+    "shots:terminal": "node scripts/render-terminal.mjs docs/evidence/api-smoke.txt docs/evidence/09-api-smoke.png"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  },
+  "devDependencies": {
+    "puppeteer-core": "^25.18.1"
+  }
+}

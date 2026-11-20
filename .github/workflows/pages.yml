@@ -1,0 +1,48 @@
+name: Deploy static site to Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build (copy public + inject API base)
+        run: |
+          mkdir -p dist
+          cp -r public/. dist/
+          if [ -n "${{ vars.API_BASE }}" ]; then
+            printf "/* 由 GitHub Actions 注入 */\nwindow.__API_BASE__ = '%s';\n" "${{ vars.API_BASE }}" > dist/config.js
+            echo "API_BASE = ${{ vars.API_BASE }}"
+          else
+            echo "未配置 API_BASE，前端将请求同源 /api（Pages 上没有后端，会显示连接失败提示）"
+          fi
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
