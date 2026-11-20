@@ -1,0 +1,36 @@
+# Key 安全：四道检查（任务4「Key 不在前端」的证据）
+# 时间：2026-11-20 20:42    仓库：Y-yanxia/web-phase5-yyx
+
+PS> Select-String -Path .gitignore -Pattern '\.env'
+.env
+.env.local
+.env.*.local
+
+PS> git ls-files | Select-String -Pattern '^\.env$'
+(无输出 —— 仓库里根本没有 .env 这个文件)
+
+PS> git log -p --all | Select-String -Pattern 'sk-[A-Za-z0-9]{8,}'
+(无输出 —— 全部提交历史里搜不到任何 Key)
+
+PS> Select-String -Path .\public\*.js -Pattern 'DEEPSEEK_API_KEY|sk-'
+(无输出 —— 前端代码里没有 Key，也没有这个变量名)
+
+# 线上真实请求体（浏览器 DevTools 抓到的那一条，不是手写）
+POST https://hub-unit-ing-horses.trycloudflare.com/api/chat
+Content-Type: application/json
+
+{"sessionId":"s-00c7a0cd-8f5","message":"我刚才第一句说了什么"}
+
+# 请求体里只有 sessionId 和 message：
+#   · 没有 Key
+#   · 没有 Authorization 头
+#   · Key 只出现在服务端 server/ai/deepseek.js 的 Authorization 头里
+
+结论：
+  1. .env 永不入库（.gitignore 第一行）
+  2. 历史提交零命中
+  3. 前端零命中
+  4. 线上请求体零 Key
+
+唯一还缺的：真实 Key 值本身的三张截图（.env 内容打码、平台面板、请求头）。
+这一项必须有真 Key 才能拍，等申请到 DEEPSEEK_API_KEY 后补（docs/ai-setup.md）。

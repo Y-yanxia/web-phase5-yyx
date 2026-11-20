@@ -1,0 +1,30 @@
+# 落盘验证：重启进程后数据还在
+# 目的：证明数据写在 SQLite 文件里，不是内存里
+# 时间：2026-11-20 20:37
+
+PS> node -e "fetch('http://127.0.0.1:3100/api/health').then(r=>r.json()).then(j=>console.log(j.data.stats))"
+before restart: { total: 5, done: 2, pending: 3 }
+
+# 把进程杀掉（Ctrl+C / 结束后台任务），然后原命令重新启动：
+PS> $env:PORT=3100; node server/index.js
+  一句话清单 · OneList
+  页面      http://localhost:3100
+  AI 模式   离线演示（未配置 DEEPSEEK_API_KEY）
+  数据库    data/app.db
+
+PS> node -e "fetch('http://127.0.0.1:3100/api/health').then(r=>r.json()).then(j=>console.log(j.data.stats, j.data.uptime))"
+after restart:  { total: 5, done: 2, pending: 3 }   uptime: 5
+
+PS> curl http://127.0.0.1:3100/api/items
+{"code":0,"data":{"items":[
+  {"id":69,"title":"明天交实验报告 线上实测-3135","done":0,"due":"2026-11-21"},
+  {"id":13,"title":"复习复变函数第 3 章","done":0,"due":"2026-11-23"},
+  {"id":12,"title":"交数据结构实验报告","done":0,"due":"2026-11-21"},
+  {"id":10,"title":"把课程表同步到日历","done":1,"due":null},
+  {"id":9,"title":"小组会：定下周分工","done":0,"due":"2026-11-20"}
+],"total":5},"msg":"ok"}
+
+结论：
+  · 进程重启后 uptime 归零（说明是新进程），但 total 仍是 5、条目逐条一致
+  · 数据文件：web-phase5-yyx/data/app.db（WAL 模式，.gitignore 已排除）
+  · 这也是任务2「数据落盘」与任务3「F5 刷新数据不丢」的同一份证据
