@@ -65,14 +65,20 @@ try {
 
   /* ---------- 3. 搜索过滤 ---------- */
   await page.type('#searchInput', title.slice(-4));
-  await sleep(900);
-  const searchCount = await page.$$eval('li.item', (els) => els.length);
+  // 线上经过隧道时单次请求 2~3 秒，用「等条件」而不是「睡固定时间」
+  let searchCount = -1;
+  try {
+    await page.waitForFunction(() => document.querySelectorAll('li.item').length === 1, { timeout: 20000 });
+    searchCount = 1;
+  } catch {
+    searchCount = await page.$$eval('li.item', (els) => els.length);
+  }
   check('搜索：只返回匹配项', searchCount === 1, `匹配 ${searchCount} 条`);
   await page.$eval('#searchInput', (el) => {
     el.value = '';
     el.dispatchEvent(new Event('input', { bubbles: true }));
   });
-  await sleep(1000);
+  await page.waitForFunction(() => document.querySelectorAll('li.item').length > 1, { timeout: 20000 }).catch(() => {});
 
   /* ---------- 4. 让 AI 加一条 ---------- */
   await page.click('.tab[data-tab="ai"]');
@@ -111,10 +117,20 @@ try {
     li?.querySelector('[data-action="delete"]')?.click();
   }, aiTitle);
   await sleep(1200);
-  const stillThere = await page.evaluate(
-    (t) => [...document.querySelectorAll('.item-title')].some((el) => el.textContent.includes(t)),
-    aiTitle
-  );
+  let stillThere = true;
+  try {
+    await page.waitForFunction(
+      (t) => ![...document.querySelectorAll('.item-title')].some((el) => el.textContent.includes(t)),
+      { timeout: 20000 },
+      aiTitle
+    );
+    stillThere = false;
+  } catch {
+    stillThere = await page.evaluate(
+      (t) => [...document.querySelectorAll('.item-title')].some((el) => el.textContent.includes(t)),
+      aiTitle
+    );
+  }
   check('删除：确认后条目消失', !stillThere);
 
   /* ---------- 6. 320px 极窄屏 ---------- */

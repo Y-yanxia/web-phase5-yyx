@@ -11,13 +11,16 @@
 | 项 | 地址 |
 |---|---|
 | 仓库 | https://github.com/Y-yanxia/web-phase5-yyx |
-| 线上页面 | https://y-yanxia.github.io/web-phase5-yyx/ （GitHub Pages，静态托管） |
-| 线上接口 | 部署后填这里：`https://<你的服务>.onrender.com` |
+| 线上页面 | https://y-yanxia.github.io/web-phase5-yyx/ （GitHub Pages） |
+| 线上接口 | `https://hub-unit-ing-horses.trycloudflare.com` （Cloudflare 隧道，**临时**，见下方说明） |
 | 本地 | http://localhost:3000 |
 
-> ⚠️ 当前状态：AI 处于**离线演示模式**（没有配置 `DEEPSEEK_API_KEY`，工具调用由规则模拟）；
-> 后端尚未部署，所以 Pages 上打开会看到「线上后端还没部署」的提示（见 `docs/evidence/13-pages-live.png`）。
-> 这两步都只需要配环境变量，代码不用改：Key 见 [`docs/ai-setup.md`](docs/ai-setup.md)，部署见 [`docs/deploy.md`](docs/deploy.md)。
+> ⚠️ **当前线上组合是「Pages 前端 + Cloudflare 隧道后端」**：功能完整可用（`npm run e2e` 对着线上跑过 9/9），
+> 但隧道依赖跑服务的那台电脑开机、且隧道进程不退出——**电脑关机/重启，接口就会失效**。
+> 换成常驻主机的步骤见 [`docs/deploy.md`](docs/deploy.md)；隧道方案见同文件「方案 C」。
+>
+> AI 目前是**离线演示模式**（没有 `DEEPSEEK_API_KEY`，工具调用由规则模拟，走的是同一套执行器和数据库）。
+> 配 Key 后自动切真模型，见 [`docs/ai-setup.md`](docs/ai-setup.md)。
 
 ---
 
