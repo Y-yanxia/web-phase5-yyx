@@ -18,6 +18,7 @@ const state = {
   loading: true,
   error: null,
   aiMode: null,
+  offline: false,
   sessionId: getSessionId(),
   streaming: false,
   controller: null,
@@ -197,7 +198,10 @@ function renderList() {
       title: '加载失败了',
       desc: state.error,
       actionText: '重试',
-      onAction: () => loadItems(),
+      onAction: () => {
+        loadItems();
+        loadMeta(); // 顺便把 AI 面板的连接状态也刷一次
+      },
       kind: 'error',
     });
     return;
@@ -458,7 +462,7 @@ async function readSse(res, onEvent) {
 }
 
 async function sendMessage(text) {
-  if (state.streaming) return;
+  if (state.streaming || state.offline) return;
   const message = text.trim();
   if (!message) return;
 
@@ -606,10 +610,22 @@ async function loadMeta() {
       : `离线演示模式（未配置 API Key，规则模拟）`;
     els.aiDot.className = `dot ${live ? 'is-live' : 'is-mock'}`;
     els.footMode.textContent = live ? `AI：${meta.model}` : 'AI：离线演示模式';
+    // 后端恢复后把输入框解禁（用户点了「重试」时走这里）
+    state.offline = false;
+    els.chatInput.disabled = false;
+    els.chatInput.placeholder = '说一句话，例如：帮我加一条明天交实验报告';
+    els.sendBtn.disabled = false;
+    els.sendBtn.title = '';
   } catch {
+    // 连不上后端时直接锁住输入框：点了才报错体验很差
+    state.offline = true;
     els.aiDot.className = 'dot';
     els.aiModeText.textContent = STATIC_HOST_HINT ? '后端未部署：静态托管只放页面' : '无法连接后端，请检查 API 地址';
     els.footMode.textContent = STATIC_HOST_HINT ? '后端未部署（见 docs/deploy.md）' : '后端未连接';
+    els.chatInput.disabled = true;
+    els.chatInput.placeholder = '后端未连接，先按上面的步骤把服务跑起来';
+    els.sendBtn.disabled = true;
+    els.sendBtn.title = '后端未连接';
   }
 }
 

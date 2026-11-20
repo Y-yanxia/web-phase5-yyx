@@ -1,5 +1,8 @@
 # 一句话清单 · OneList
 
+[![CI](https://github.com/Y-yanxia/web-phase5-yyx/actions/workflows/ci.yml/badge.svg)](https://github.com/Y-yanxia/web-phase5-yyx/actions/workflows/ci.yml)
+[![Deploy static site to Pages](https://github.com/Y-yanxia/web-phase5-yyx/actions/workflows/pages.yml/badge.svg)](https://github.com/Y-yanxia/web-phase5-yyx/actions/workflows/pages.yml)
+
 > 26 级第五阶段 · 完善 Web + AI 应用
 > 一个能听懂人话的待办清单：原生前端 + Express + SQLite + 大模型工具调用。
 
