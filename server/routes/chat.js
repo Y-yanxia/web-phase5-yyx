@@ -11,9 +11,16 @@ export const chatRouter = Router();
 const MAX_MESSAGE = 2000;
 
 function writeEvent(res, payload) {
-  if (res.writableEnded) return false;
-  res.write(`data: ${JSON.stringify(payload)}\n\n`);
-  return true;
+  if (res.writableEnded || res.destroyed) return false;
+  try {
+    res.write(`data: ${JSON.stringify(payload)}\n\n`);
+    return true;
+  } catch (err) {
+    // 浏览器关页面 / 点停止后，socket 已销毁，继续写会抛 ERR_STREAM_DESTROYED。
+    // 这类错误不该把进程带走，记一行日志就够。
+    console.warn('[chat] 客户端已断开，忽略后续写入：', err.code || err.message);
+    return false;
+  }
 }
 
 // 前端启动时读一下：当前是真模型还是离线演示模式

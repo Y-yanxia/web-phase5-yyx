@@ -181,12 +181,16 @@ npm run smoke        # 输出 docs/evidence/api-smoke.txt
 npm test
 ```
 
-16 条用例覆盖：创建/校验/更新/删除/404/400/统计/SSE 工具调用全链路/多轮上下文/代词指代。测试用 `DB_FILE=:memory:`，不污染本地数据。
+24 条用例，分两层：
+
+- `tests/api.test.js`（16 条）：HTTP 层。创建/校验/更新/删除/404/400/统计/SSE 工具调用全链路/多轮上下文/代词指代。
+- `tests/tools.test.js`（8 条）：工具执行器层。直接调 `executeTool()`，覆盖空标题、未知工具、多条命中、过滤条件等边界。
+
+测试用 `DB_FILE=:memory:`，不污染本地数据。
 
 ```
-ℹ tests 16
-ℹ pass 16
-ℹ fail 0
+ℹ tests 16  ℹ pass 16  ℹ fail 0
+ℹ tests  8  ℹ pass  8  ℹ fail 0
 ```
 
 另外两个脚本：
@@ -294,6 +298,8 @@ web-phase5-yyx/
 - **为什么这样设计**：单页双 Tab 省掉路由；SQLite 免运维；工具执行器与模型解耦，mock 和真模型共用一条数据链路。
 - **讲某段代码**：`server/ai/agent.js` 的 `liveAgent()` 双轮循环，或 `server/routes/chat.js` 的断开感知。
 - **哪里最容易坏**：SSE 被缓冲、模型不调工具、免费实例数据丢失——三处都有事故记录。
+
+完整版（含 8 个追问题、代码走读路径、现场改代码小任务）见 [`docs/defense.md`](docs/defense.md)。
 
 ---
 

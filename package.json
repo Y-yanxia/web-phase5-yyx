@@ -10,7 +10,7 @@
   "scripts": {
     "start": "node server/index.js",
     "dev": "node --watch server/index.js",
-    "test": "node tests/api.test.js",
+    "test": "node tests/api.test.js && node tests/tools.test.js",
     "seed": "node scripts/seed.mjs",
     "smoke": "node scripts/smoke.mjs",
     "shots": "node scripts/screenshots.mjs",
