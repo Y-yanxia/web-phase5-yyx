@@ -12,8 +12,9 @@
 | 线上接口 | 部署后填这里：`https://<你的服务>.onrender.com` |
 | 本地 | http://localhost:3000 |
 
-> ⚠️ 当前状态：AI 处于**离线演示模式**（没有配置 `DEEPSEEK_API_KEY`，工具调用由规则模拟）。
-> 配上 Key 后自动切换真实模型，代码不用改，见 [`docs/ai-setup.md`](docs/ai-setup.md)。
+> ⚠️ 当前状态：AI 处于**离线演示模式**（没有配置 `DEEPSEEK_API_KEY`，工具调用由规则模拟）；
+> 后端尚未部署，所以 Pages 上打开会看到「线上后端还没部署」的提示（见 `docs/evidence/13-pages-live.png`）。
+> 这两步都只需要配环境变量，代码不用改：Key 见 [`docs/ai-setup.md`](docs/ai-setup.md)，部署见 [`docs/deploy.md`](docs/deploy.md)。
 
 ---
 

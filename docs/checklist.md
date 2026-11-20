@@ -15,7 +15,7 @@
 | 1.6 | 图片 ≤300KB/张 | ✅ | 页面无位图，只有内联 SVG，0 请求 |
 | 1.7 | Console 无红 | ✅ | 截图脚本断言，10 张图全程无 error |
 | 1.8 | 只用原生 HTML/CSS/JS | ✅ | 无框架、无构建 |
-| 1.9 | 部署为 https 公网地址 | ⏳ | Pages 已配；后端 Render 待部署（见 `docs/deploy.md`） |
+| 1.9 | 部署为 https 公网地址 | ✅ | Pages 已上线（`13-pages-live.png`）；后端 Render 待部署 |
 | 1.10 | 电脑截图 + 手机截图 | ✅ | `01`、`05` |
 | 1.11 | 抓包 3 条（方法/状态码/耗时） | ✅ | `docs/network.md` |
 | 1.12 | 故意 404 | ✅ | `10-404-page.png`，HTTP 404 |
