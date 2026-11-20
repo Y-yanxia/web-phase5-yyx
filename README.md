@@ -19,8 +19,9 @@
 > 但隧道依赖跑服务的那台电脑开机、且隧道进程不退出——**电脑关机/重启，接口就会失效**。
 > 换成常驻主机的步骤见 [`docs/deploy.md`](docs/deploy.md)；隧道方案见同文件「方案 C」。
 >
-> AI 目前是**离线演示模式**（没有 `DEEPSEEK_API_KEY`，工具调用由规则模拟，走的是同一套执行器和数据库）。
-> 配 Key 后自动切真模型，见 [`docs/ai-setup.md`](docs/ai-setup.md)。
+> AI 已接入**真实模型** `deepseek-chat`：流式输出、工具调用、多轮上下文都在线上实测过（`15`、`18`）。
+> Key 只在服务端 `.env`，不进仓库、不出现在前端请求里（`19-key-safety.png`）。
+> 没有 Key 时自动退化为规则模拟，见 [`docs/ai-setup.md`](docs/ai-setup.md)。
 
 ---
 

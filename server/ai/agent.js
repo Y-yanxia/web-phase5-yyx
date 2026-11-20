@@ -14,6 +14,14 @@ export const SYSTEM_PROMPT = `你是「一句话清单」的智能助手，帮�
 4. 用户只是闲聊时正常回答，不要滥用工具。
 5. 回复控制在 3 句话以内，语气自然，不要输出 Markdown 标题。`;
 
+// 模型不知道「今天是几号」，不告诉它就会把「明天」算成 2026-06-11（真实踩过）。
+// 每次请求现算一遍，跨天也不会错。
+export function currentDatePrompt(now = new Date()) {
+  const iso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  const weekday = '日一二三四五六'[now.getDay()];
+  return `当前日期：${iso}（周${weekday}）。凡是「今天/明天/后天/周五」这类相对日期，先按这个基准换算成 YYYY-MM-DD 再传给工具，不要自己猜。`;
+}
+
 // sessionId -> { messages, updatedAt }；进程内存即可，重启后历史清空是预期行为
 const sessions = new Map();
 const SESSION_TTL_MS = 2 * 60 * 60 * 1000;
@@ -297,7 +305,7 @@ export async function runAgent({ sessionId, message, signal, send }) {
   }
 
   const messages = [
-    { role: 'system', content: SYSTEM_PROMPT },
+    { role: 'system', content: `${SYSTEM_PROMPT}\n\n${currentDatePrompt()}` },
     ...history.map(({ role, content }) => ({ role, content })),
     { role: 'user', content: message },
   ];

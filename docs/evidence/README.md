@@ -20,11 +20,11 @@
 | `12-cors-fixed.png` | 白名单加上来源后，同一页面恢复正常 | 任务 3 |
 | `13-pages-live.png` | 线上 Pages 真实截图（Pages 前端 + 隧道后端，数据来自真接口） | 任务 1/6 |
 | `14-pages-ai-offline.png` | 后端断开时的兜底：AI 输入框被禁用并说明原因 | 任务 4/6 |
-| `15-live-ai-tool-call.png` | **线上**说一句话 → 工具卡片 → 数据库真的多一条 | 任务 5（关键证据） |
+| `15-live-ai-tool-call.png` | **线上真模型**：说一句话 → 工具卡片 → 数据库真的多一条 | 任务 5（关键证据） |
 | `16-restart-persistence.png` | 杀掉进程重启：uptime 归零但数据仍在（5 条逐条一致） | 任务 2（落盘） |
 | `17-state-empty.png` | 空态（线上，清空数据后） | 任务 3（三态之一） |
-| `18-live-context-4rounds.png` | 线上连说 4 轮，第 4 轮准确引用第 1 轮 | 任务 4（上下文） |
-| `19-key-safety.png` | Key 安全四道检查：.gitignore / 历史 / 前端 / 线上请求体 | 任务 4（Key 安全） |
+| `18-live-context-4rounds.png` | **线上真模型**连说 4 轮，第 4 轮准确引用第 1 轮 | 任务 4（上下文） |
+| `19-key-safety.png` | Key 安全五道检查（已配真 Key）：.env 打码 / 未跟踪 / 历史零命中 / 前端零命中 / 线上请求体零 Key | 任务 4（Key 安全） |
 | `key-safety.txt` | 上面那张图的原始命令与输出 | 任务 4 |
 | `restart-persistence.txt` | 16 的原始命令与输出 | 任务 2 |
 | `e2e.txt` | 浏览器端到端冒烟输出（9/9，本地） | 任务 3/6 |

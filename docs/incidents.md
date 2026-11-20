@@ -239,3 +239,51 @@ taskkill /PID <pid> /F
 
 **经验**：改完代码没效果，先怀疑「你看的不是你以为的那个服务」。
 `/api/health` 里带上 `uptime` 和 `mode`，一眼就能认出是哪个进程。
+
+---
+
+## 事故 6 · 接入真模型后，"明天"变成了 2026-06-11
+
+**现象**
+
+换上真实 `deepseek-chat` 后第一次测：
+
+```
+用户：帮我加一条明天交实验报告
+模型：add_item({"title":"交实验报告","due":"2026-06-11"})
+```
+
+标题没问题，**日期完全错**：当天是 2026-11-20，明天应该是 2026-11-21。
+
+**定位**
+
+这不是模型"笨"，是信息缺失：模型没有系统时间，系统提示词里也没告诉它今天几号。
+它只能从训练数据里"猜"一个看起来合理的日期。mock 模式里我用 `guessDue()` 自己算，所以之前一直没暴露。
+
+**修复**
+
+每次请求现算日期，拼进 system 消息（`server/ai/agent.js`）：
+
+```js
+export function currentDatePrompt(now = new Date()) {
+  const iso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  const weekday = '日一二三四五六'[now.getDay()];
+  return `当前日期：${iso}（周${weekday}）。凡是「今天/明天/后天/周五」这类相对日期，先按这个基准换算成 YYYY-MM-DD 再传给工具，不要自己猜。`;
+}
+
+// 组装 messages 时
+{ role: 'system', content: `${SYSTEM_PROMPT}\n\n${currentDatePrompt()}` }
+```
+
+**验证**
+
+```
+帮我加一条明天交实验报告        → add_item({title:"交实验报告",        due:"2026-11-21"})
+再帮我加一条后天下午三点开组会   → add_item({title:"下午三点开组会",    due:"2026-11-22"})
+```
+
+两天后再跑也不会错，因为日期是每次请求现算的，不是写死在提示词里。
+
+**经验**：凡是依赖"现在"的能力（日期、时区、周几），时间基准必须**显式传给模型**；
+模型不会自己去查系统时钟。这类 bug 在 mock 阶段是看不见的——这也说明 mock 只能验证链路，
+真实语义正确性必须用真模型回归一遍。
