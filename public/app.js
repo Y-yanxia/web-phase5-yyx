@@ -156,6 +156,24 @@ function showState({ title, desc, actionText, onAction, kind }) {
   if (btn) btn.addEventListener('click', onAction, { once: true });
 }
 
+// GitHub Pages 上没有后端时，别只丢一句错误，直接给「怎么把它跑起来」
+function showStaticHostState() {
+  els.listState.hidden = false;
+  els.listState.className = 'state state-info';
+  els.listState.innerHTML = `
+    <h3>线上后端还没部署</h3>
+    <p>GitHub Pages 只能托管静态文件，清单接口和 AI 需要一个 Node 服务。三步在本地跑起来：</p>
+    <ol class="steps">
+      <li><code>git clone https://github.com/Y-yanxia/web-phase5-yyx.git</code></li>
+      <li><code>npm install</code> 然后 <code>npm start</code></li>
+      <li>浏览器打开 <code>http://localhost:3000</code></li>
+    </ol>
+    <p class="state-links">
+      <a class="btn btn-primary btn-sm" href="https://github.com/Y-yanxia/web-phase5-yyx" target="_blank" rel="noopener">看源码</a>
+      <a class="btn btn-ghost btn-sm" href="https://github.com/Y-yanxia/web-phase5-yyx/blob/main/docs/deploy.md" target="_blank" rel="noopener">部署步骤</a>
+    </p>`;
+}
+
 function renderList() {
   els.list.innerHTML = '';
 
@@ -171,6 +189,10 @@ function renderList() {
   }
 
   if (state.error) {
+    if (STATIC_HOST_HINT) {
+      showStaticHostState();
+      return;
+    }
     showState({
       title: '加载失败了',
       desc: state.error,
