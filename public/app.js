@@ -86,6 +86,11 @@ class ApiError extends Error {
   }
 }
 
+// GitHub Pages 只有静态文件，后端没部署时给它一句能照做的提示，而不是干巴巴的「连不上」
+const STATIC_HOST_HINT = location.hostname.endsWith('github.io')
+  ? '线上后端还没部署：GitHub Pages 只能放静态页。本地 npm start 可完整运行，部署步骤见 docs/deploy.md'
+  : null;
+
 async function api(path, options = {}) {
   let res;
   try {
@@ -211,7 +216,7 @@ async function loadItems() {
     state.items = data.items;
     state.stats = stats;
   } catch (err) {
-    state.error = err.message;
+    state.error = STATIC_HOST_HINT || err.message;
     state.items = [];
   } finally {
     const wait = Math.max(0, 250 - (Date.now() - started));
@@ -580,8 +585,8 @@ async function loadMeta() {
     els.aiDot.classList.toggle('is-mock', !live);
     els.footMode.textContent = live ? `AI：${meta.model}` : 'AI：离线演示模式';
   } catch {
-    els.aiModeText.textContent = '无法连接后端，请检查 API 地址';
-    els.footMode.textContent = '后端未连接';
+    els.aiModeText.textContent = STATIC_HOST_HINT ? '后端未部署：静态托管只放页面' : '无法连接后端，请检查 API 地址';
+    els.footMode.textContent = STATIC_HOST_HINT ? '后端未部署（见 docs/deploy.md）' : '后端未连接';
   }
 }
 
