@@ -168,3 +168,52 @@ test('对话接口：一句话 -> 真的调了工具 -> 数据库真的多了一
   assert.equal(after.total, before + 1, '数据库必须真的多一条');
   assert.ok(after.items.some((i) => i.title === '明天交实验报告'));
 });
+
+// 任务 4 要求「连续 3 轮上下文」：用同一 sessionId 连说三句，第四句问第一句说了什么
+test('连续多轮：第 4 轮能引用第 1 轮的内容', async () => {
+  const ask = async (message) => {
+    const res = await fetch(`${base}/api/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId: 't-ctx', message }),
+    });
+    const text = await res.text();
+    return text
+      .split('\n\n')
+      .map((c) => c.split('\n').find((l) => l.startsWith('data:')))
+      .filter(Boolean)
+      .map((l) => JSON.parse(l.slice(5)))
+      .filter((e) => e.type === 'delta')
+      .map((e) => e.text)
+      .join('');
+  };
+
+  await ask('帮我加一条明天交实验报告');
+  await ask('再帮我加一条周五复习复变函数');
+  await ask('我还有哪些没做完');
+  const reply = await ask('我刚才第一句说了什么');
+
+  assert.match(reply, /实验报告/, `第 4 轮应当引用第 1 轮，实际回复：${reply}`);
+});
+
+// 「把它勾掉」这种代词需要上下文才能消解
+test('代词指代：说「把它勾掉」能完成最近新增的那条', async () => {
+  const created = await fetch(`${base}/api/chat`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ sessionId: 't-pron', message: '帮我加一条还图书馆的书' }),
+  }).then((r) => r.text());
+  assert.match(created, /add_item/);
+
+  const res = await fetch(`${base}/api/chat`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ sessionId: 't-pron', message: '把它勾掉' }),
+  });
+  const text = await res.text();
+  assert.match(text, /complete_item/, '应当调用 complete_item');
+
+  const items = (await call('/api/items')).json.data.items;
+  const target = items.find((i) => i.title.includes('还图书馆'));
+  assert.equal(target.done, 1);
+});

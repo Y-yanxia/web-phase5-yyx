@@ -2,6 +2,7 @@
 // 维护会话上下文 -> 调模型 -> 模型要调工具就真的执行 -> 把结果回填 -> 再问一轮拿自然语言总结。
 import { streamCompletion } from './deepseek.js';
 import { TOOL_DEFINITIONS, executeTool } from './tools.js';
+import { listItems } from '../db.js';
 import { config } from '../config.js';
 
 export const SYSTEM_PROMPT = `你是「一句话清单」的智能助手，帮用户管理他的待办清单。
@@ -105,9 +106,31 @@ function extractTitle(text) {
     .trim();
 }
 
-async function mockAgent({ message, signal, send }) {
+async function mockAgent({ message, history = [], signal, send }) {
   const text = message.trim();
   const decided = [];
+
+  // 上下文能力：演示模式也要能回答「我刚才说了什么」，
+  // 否则任务 4「连续 3 轮上下文」在没 Key 的时候就完全失效。
+  if (/(我刚才|刚才我|第一句|上一句|我说了什么|前面说)/.test(text)) {
+    const first = history.find((m) => m.role === 'user');
+    const last = [...history].reverse().find((m) => m.role === 'user');
+    const reply = first
+      ? `你第一条说的是「${first.content}」，最近一条是「${last.content}」。目前共 ${history.filter((m) => m.role === 'user').length} 轮对话。`
+      : '这是我们的第一句对话，我还没有上文可以引用。';
+    for (const ch of reply) {
+      await sleep(12, signal);
+      send({ type: 'delta', text: ch });
+    }
+    return reply;
+  }
+
+  // 「把它勾掉」这类代词，靠当前清单里最新的未完成项来消解
+  if (/^(把它|把它给|这个|它)(勾掉|完成|做完|标记)/.test(text)) {
+    const target = listItems({ done: 0 })[0];
+    if (target) decided.push({ name: 'complete_item', args: { keyword: target.title } });
+    else decided.push({ name: 'query_items', args: { done: 0 } });
+  }
 
   // 先判「查」再判「完成」：否则「我还有哪些没做完」会被「做完」两个字骗去调 complete_item
   const isQuery =
@@ -115,12 +138,12 @@ async function mockAgent({ message, signal, send }) {
     /(没做完|没完成|未完成|还没)/.test(text);
   const isComplete = !isQuery && /(完成|做完|搞定|勾掉|办完|弄完)/.test(text);
 
-  if (isComplete) {
+  if (decided.length === 0 && isComplete) {
     const keyword = extractTitle(
       text.replace(/(我)?(已经)?(完成|做完|搞定|勾掉|办完|弄完)(了|啦)?/g, '').replace(/[的了]/g, '')
     );
     decided.push({ name: 'complete_item', args: { keyword: keyword || text } });
-  } else if (isQuery) {
+  } else if (decided.length === 0 && isQuery) {
     const done = /(已完成|做完的|完成的|已经做完)/.test(text)
       ? 1
       : /(没做完|没完成|未完成|还没|还剩)/.test(text)
@@ -132,7 +155,7 @@ async function mockAgent({ message, signal, send }) {
     const keyword = (kwByVerb?.[1] || kwByAbout?.[1] || '').replace(/[。.!！?？\s]/g, '');
     if (keyword) args.keyword = keyword;
     decided.push({ name: 'query_items', args });
-  } else if (/(加|记|新增|添加|提醒|别忘|备忘)/.test(text)) {
+  } else if (decided.length === 0 && /(加|记|新增|添加|提醒|别忘|备忘)/.test(text)) {
     const title = extractTitle(text);
     const args = { title: title || text };
     const due = guessDue(text);
@@ -268,7 +291,7 @@ export async function runAgent({ sessionId, message, signal, send }) {
   const history = getSession(sessionId);
 
   if (config.aiMode === 'mock') {
-    const reply = await mockAgent({ message, signal, send });
+    const reply = await mockAgent({ message, history, signal, send });
     saveTurn(sessionId, message, reply);
     return { mode: 'mock', reply };
   }

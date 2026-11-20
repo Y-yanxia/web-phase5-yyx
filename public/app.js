@@ -582,9 +582,10 @@ async function loadMeta() {
     els.aiModeText.textContent = live
       ? `已接入 ${meta.model} · 支持工具调用`
       : `离线演示模式（未配置 API Key，规则模拟）`;
-    els.aiDot.classList.toggle('is-mock', !live);
+    els.aiDot.className = `dot ${live ? 'is-live' : 'is-mock'}`;
     els.footMode.textContent = live ? `AI：${meta.model}` : 'AI：离线演示模式';
   } catch {
+    els.aiDot.className = 'dot';
     els.aiModeText.textContent = STATIC_HOST_HINT ? '后端未部署：静态托管只放页面' : '无法连接后端，请检查 API 地址';
     els.footMode.textContent = STATIC_HOST_HINT ? '后端未部署（见 docs/deploy.md）' : '后端未连接';
   }

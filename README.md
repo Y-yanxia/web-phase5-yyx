@@ -167,7 +167,7 @@ npm run smoke        # 输出 docs/evidence/api-smoke.txt
 | 模式 | 触发条件 | 行为 | 用途 |
 |---|---|---|---|
 | `live` | 配了 `DEEPSEEK_API_KEY` | 真调 DeepSeek：SSE 流式 + `tools` 双轮循环 | 正式演示 / 答辩 |
-| `mock` | 没配 Key 或 `MOCK_AI=1` | 规则模拟：正则判断意图 → 调同一个 `executeTool` → 拼自然语言 | 无网络/无额度时也能跑通全链路 |
+| `mock` | 没配 Key 或 `MOCK_AI=1` | 规则模拟：正则判断意图 → 调同一个 `executeTool` → 拼自然语言；同样维护多轮上下文，能消解「把它勾掉」里的代词 | 无网络/无额度时也能跑通全链路 |
 
 **关键点**：两种模式走的是**同一套工具执行器和同一张表**。mock 只替换「模型」这一层，数据链路完全一样。所以没 Key 时，截图里的「说一句话 → 数据库多一条」也是真的。
 
@@ -181,11 +181,11 @@ npm run smoke        # 输出 docs/evidence/api-smoke.txt
 npm test
 ```
 
-14 条用例覆盖：创建/校验/更新/删除/404/400/统计/SSE 工具调用全链路。测试用 `DB_FILE=:memory:`，不污染本地数据。
+16 条用例覆盖：创建/校验/更新/删除/404/400/统计/SSE 工具调用全链路/多轮上下文/代词指代。测试用 `DB_FILE=:memory:`，不污染本地数据。
 
 ```
-ℹ tests 14
-ℹ pass 14
+ℹ tests 16
+ℹ pass 16
 ℹ fail 0
 ```
 

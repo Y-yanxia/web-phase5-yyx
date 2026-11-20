@@ -53,7 +53,7 @@
 |---|---|---|---|
 | 4.1 | 后端转发，Key 只在服务端 | ✅ | `routes/chat.js`，前端不含 Key |
 | 4.2 | 流式输出（字一个个蹦） | ✅ | SSE + `getReader()`；mock 模式也逐字 |
-| 4.3 | 连续 3 轮上下文 + 长度限制 | ✅ | `Map` 会话 + `HISTORY_LIMIT` |
+| 4.3 | 连续 3 轮上下文 + 长度限制 | ✅ | `Map` 会话 + `HISTORY_LIMIT`；`npm test` 有「第 4 轮引用第 1 轮」用例，mock 模式同样生效 |
 | 4.4 | 像样的系统提示词 | ✅ | `agent.js` `SYSTEM_PROMPT` |
 | 4.5 | 错误说人话（401/429/超时/余额） | ✅ | `deepseek.js` `translateStatus` |
 | 4.6 | 「停止生成」按钮 | ✅ | 前端 abort + 后端 `res.on('close')` |

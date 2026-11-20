@@ -223,8 +223,13 @@ a {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--ok);
+  background: var(--muted);
   display: inline-block;
+}
+
+/* 绿色 = 真模型在线；黄色 = 离线演示；灰色 = 后端没连上 */
+.dot.is-live {
+  background: var(--ok);
 }
 
 .dot.is-mock {
