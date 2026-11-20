@@ -18,6 +18,9 @@
 | `11-cors-error.png` | 跨域被拦：页面进入错误态 | 任务 3（事故 1） |
 | `11-cors-error.log.txt` | 上面那张图对应的 Console 原文 | 任务 3 |
 | `12-cors-fixed.png` | 白名单加上来源后，同一页面恢复正常 | 任务 3 |
+| `13-pages-live.png` | GitHub Pages 线上真实截图（后端未部署时的三步指引） | 任务 1/6 |
+| `14-pages-ai-offline.png` | 线上 AI 面板：后端未连接时输入框被禁用并说明原因 | 任务 4/6 |
+| `e2e.txt` | 浏览器端到端冒烟输出（9/9） | 任务 3/6 |
 | `13-pages-live.png` | GitHub Pages 线上真实截图（后端未部署时的提示） | 任务 1/6 |
 | `api-smoke.txt` | 冒烟测试的纯文本输出（09 的源数据） | 任务 2 |
 
