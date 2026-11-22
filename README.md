@@ -12,7 +12,7 @@
 |---|---|
 | 仓库 | https://github.com/Y-yanxia/web-phase5-yyx |
 | 线上页面 | https://y-yanxia.github.io/web-phase5-yyx/ （GitHub Pages） |
-| 线上接口 | `https://hub-unit-ing-horses.trycloudflare.com` （Cloudflare 隧道，**临时**，见下方说明） |
+| 线上接口 | `https://readings-disclose-assisted-experiment.trycloudflare.com` （Cloudflare 隧道，**临时**，见下方说明） |
 | 本地 | http://localhost:3000 |
 
 > ⚠️ **当前线上组合是「Pages 前端 + Cloudflare 隧道后端」**：功能完整可用（`npm run e2e` 对着线上跑过 9/9），
