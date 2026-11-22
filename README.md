@@ -279,6 +279,29 @@ web-phase5-yyx/
 
 部署完把 `https://xxx.onrender.com` 填进前端（Pages 的 `API_BASE` 变量或 `public/config.js`）。
 
+> Render 主站国内常打不开，注册也可能要求绑卡（$1 预授权）。遇到就走 9.3。
+
+### 9.3 后端：容器镜像（最通用，已自动构建）
+
+仓库每次推 `main`，Actions 会构建镜像推到 GHCR，并在容器里跑冒烟测试：
+
+```
+ghcr.io/y-yanxia/web-phase5-yyx:latest      # 公开，linux/amd64 + arm64
+```
+
+任何一台装了 Docker 的机器（学生机、云服务器、家里旧电脑）一条命令：
+
+```bash
+docker run -d --name onelist -p 3000:3000 \
+  -e ALLOWED_ORIGINS="https://y-yanxia.github.io" \
+  -e DEEPSEEK_API_KEY="sk-..." \
+  -v onelist-data:/app/data --restart unless-stopped \
+  ghcr.io/y-yanxia/web-phase5-yyx:latest
+```
+
+或者把仓库 clone 下来 `docker compose up -d`（已带 healthcheck 和 volume）。
+各云平台怎么填、怎么验证、怎么更新，见 [`docs/deploy.md`](docs/deploy.md) 方案 D。
+
 > 免费实例冷启动 30–50 秒；文件系统是临时的，**服务重启后 SQLite 数据会清空**。这是免费额度的限制，不是代码 bug，README 的「已知问题」里写清楚了。
 
 ---

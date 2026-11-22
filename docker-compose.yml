@@ -1,0 +1,28 @@
+# 一条命令把服务跑起来：docker compose up -d
+# 前提：装好 Docker；把 DEEPSEEK_API_KEY 写进同目录的 .env（或直接 export）
+services:
+  onelist:
+    image: ghcr.io/y-yanxia/web-phase5-yyx:latest
+    container_name: onelist
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DB_FILE: /app/data/app.db
+      # 前端 Pages 域名 + 服务器自己的地址（用 IP 访问时也要加）
+      ALLOWED_ORIGINS: https://y-yanxia.github.io,http://localhost:3000
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      DEEPSEEK_MODEL: deepseek-chat
+    volumes:
+      # SQLite 文件持久化；删容器不丢数据
+      - onelist-data:/app/data
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  onelist-data:

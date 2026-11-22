@@ -167,3 +167,84 @@ curl -i -X OPTIONS https://xxx.trycloudflare.com/api/items \
 >    而且它只有 `/tmp` 可写，SQLite 数据每次冷启动都会清空。
 > 2. **Render 注册要绑卡时不要硬上**。新版 Render 可能要求 $1 预授权验证，
 >    学生没有双币卡就走方案 C 或国内平台。
+
+---
+
+## 六、方案 D：容器镜像（已自动构建，最通用）
+
+仓库里已经有 `Dockerfile` + `.github/workflows/docker.yml`：每次推 `main`，
+GitHub Actions 会构建镜像、推到 GitHub 容器仓库，并在容器里跑一遍冒烟
+（`/api/health` → 新增 → 缺字段 400），通过了才发布。
+
+**镜像地址**（公开可匿名拉取，linux/amd64 + linux/arm64 双架构）：
+
+```
+ghcr.io/y-yanxia/web-phase5-yyx:latest
+```
+
+### 6.1 任何一台装了 Docker 的机器（学生机 / 云服务器 / 家里的旧电脑）
+
+```bash
+docker run -d --name onelist \
+  -p 3000:3000 \
+  -e NODE_ENV=production \
+  -e ALLOWED_ORIGINS="https://y-yanxia.github.io,http://<这台机器的公网IP>:3000" \
+  -e DEEPSEEK_API_KEY="sk-你的key" \
+  -v onelist-data:/app/data \
+  --restart unless-stopped \
+  ghcr.io/y-yanxia/web-phase5-yyx:latest
+```
+
+或者用仓库里的 `docker-compose.yml`（更省事）：
+
+```bash
+git clone https://github.com/Y-yanxia/web-phase5-yyx.git
+cd web-phase5-yyx
+echo "DEEPSEEK_API_KEY=sk-你的key" > .env
+docker compose up -d
+docker compose logs -f      # 看到“页面 http://localhost:3000”就成功
+```
+
+**验证**：
+
+```bash
+curl http://127.0.0.1:3000/api/health
+curl -X POST http://127.0.0.1:3000/api/items -H "Content-Type: application/json" -d '{"title":"docker test"}'
+```
+
+**更新版本**：`docker compose pull && docker compose up -d`（数据在 volume 里，不会丢）。
+
+**数据持久化**：SQLite 落在 `/app/data/app.db`，已挂 `onelist-data` 卷；
+删容器、重启机器都不丢，只有 `docker volume rm onelist-data` 才会清空。
+
+### 6.2 云平台怎么填
+
+| 平台 | 选什么 | 填什么 |
+|---|---|---|
+| 阿里云 / 腾讯云 轻量应用服务器 | 系统镜像 Ubuntu，装 Docker | 跑 6.1 的命令，安全组放行 3000 |
+| 阿里云 函数计算 FC | 自定义容器 | 镜像填 `ghcr.io/...:latest`，端口 3000 |
+| 腾讯云 云托管 | 自定义镜像 | 同上，环境变量照抄 |
+| Sealos | 应用管理 → 从镜像创建 | 镜像地址 + 端口 3000 + 环境变量 |
+| Zeabur | Docker 部署 | 镜像地址或直接连 GitHub 仓库 |
+
+> 用 IP 访问时，`ALLOWED_ORIGINS` 里要加上 `http://<公网IP>:3000`，
+> 否则浏览器会拦跨域（后端自己给自己发请求不受影响，但 Pages 页面调它必须加）。
+
+### 6.3 和隧道方案的区别
+
+| | 方案 C 隧道 | 方案 D 容器 |
+|---|---|---|
+| 需要账号 | 不需要 | 需要（云平台） |
+| 需要绑卡 | 不需要 | 多数免费额度不需要 |
+| 关机是否失效 | **会** | 不会 |
+| 地址是否固定 | 每次重启会变 | 固定 |
+| 数据持久化 | 本机文件 | volume |
+| 适合 | 演示 / 录屏 | 正式交付 |
+
+### 6.4 部署完记得改前端地址
+
+后端有了固定地址后，把仓库变量 `API_BASE` 改成它，再重跑 Pages 工作流：
+
+1. Settings → Secrets and variables → Actions → Variables → `API_BASE` = 新地址
+2. Actions → `Deploy static site to Pages` → Run workflow
+3. 打开 Pages，列表能加载即成功
