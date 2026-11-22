@@ -67,7 +67,9 @@ jobs:
           set -e
           echo "镜像到 $ACR_REGISTRY"
           echo "$ACR_PASSWORD" | docker login "$ACR_REGISTRY" -u "$ACR_USERNAME" --password-stdin
-          docker pull ghcr.io/y-yanxia/web-phase5-yyx:latest
+          # 只拉 amd64 单平台：多架构 index 里带 buildkit 的 attestation 清单，
+          # 阿里云 ACR 不接受 application/vnd.oci.empty.v1+json 这种 manifest 类型
+          docker pull --platform linux/amd64 ghcr.io/y-yanxia/web-phase5-yyx:latest
           docker tag  ghcr.io/y-yanxia/web-phase5-yyx:latest "$ACR_REGISTRY/onelist/onelist-api:v1"
           docker push "$ACR_REGISTRY/onelist/onelist-api:v1"
           echo "完成：$ACR_REGISTRY/onelist/onelist-api:v1"
