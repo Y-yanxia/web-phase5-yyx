@@ -54,3 +54,20 @@ jobs:
             -X POST http://localhost:3000/api/items \
             -H 'Content-Type: application/json' -d '{"due":"2026-11-25"}'
           docker rm -f onelist
+
+      # 把同一个镜像再镜像一份到阿里云 ACR（国内 FC 拉取快）
+      # 需要三个仓库 Secrets：ACR_REGISTRY / ACR_USERNAME / ACR_PASSWORD
+      - name: Mirror image to Aliyun ACR
+        if: env.ACR_REGISTRY != ''
+        env:
+          ACR_REGISTRY: ${{ secrets.ACR_REGISTRY }}
+          ACR_USERNAME: ${{ secrets.ACR_USERNAME }}
+          ACR_PASSWORD: ${{ secrets.ACR_PASSWORD }}
+        run: |
+          set -e
+          echo "镜像到 $ACR_REGISTRY"
+          echo "$ACR_PASSWORD" | docker login "$ACR_REGISTRY" -u "$ACR_USERNAME" --password-stdin
+          docker pull ghcr.io/y-yanxia/web-phase5-yyx:latest
+          docker tag  ghcr.io/y-yanxia/web-phase5-yyx:latest "$ACR_REGISTRY/onelist/onelist-api:v1"
+          docker push "$ACR_REGISTRY/onelist/onelist-api:v1"
+          echo "完成：$ACR_REGISTRY/onelist/onelist-api:v1"
