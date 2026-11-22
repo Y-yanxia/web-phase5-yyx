@@ -31,6 +31,11 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
+          # 只出 amd64 单平台 + 关掉 provenance/sbom：
+          # 否则 manifest index 里会带 attestation（application/vnd.oci.empty.v1+json），阿里云 ACR 不支持
+          platforms: linux/amd64
+          provenance: false
+          sbom: false
           push: true
           tags: |
             ghcr.io/y-yanxia/web-phase5-yyx:latest
