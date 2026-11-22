@@ -313,6 +313,25 @@ docker run -d --name onelist -p 3000:3000 \
 | 容器镜像（ghcr / 阿里云 ACR） | ✅ 已构建并推到两处 | 任何装了 Docker 的机器一条命令；`docs/deploy.md` 方案 D |
 | 阿里云函数计算 FC | ✅ 已实测跑通（接口/CORS/400 全过） | **实例回收会清空 SQLite**；要持久必须挂 NAS，见 `docs/deploy.md` 方案 E |
 | Cloudflare Workers + D1 | 🟡 代码就绪，待部署 | 免费、地址固定、数据持久；见 [`docs/worker.md`](docs/worker.md) |
+### 9.5 开机自动恢复（已配置在本机）
+
+本机登录后会静默执行 `scripts/auto-online.ps1`，它做四件事：
+
+1. 后端没起就起（`node server/index.js`）
+2. 起 Cloudflare 隧道（`--protocol http2`）
+3. 从 Git Credential Manager 取 token，**自动更新仓库变量 `API_BASE`**
+4. 自动重跑 `Deploy static site to Pages`
+
+日志：`web-phase5-yyx/.cache/cf/auto-online.log`，当前地址：`.cache/cf/last-url.txt`。
+
+启动项位置（用户启动文件夹）：
+
+```
+%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\OneList-AutoOnline.lnk
+```
+
+> 隧道进程退出会自动重启（脚本里是 while 循环）；地址每次开机都会变，但前端会跟着自动更新，
+> 所以**不用人工干预**。若哪天 GitHub token 失效，脚本会跳过第 3、4 步并把原因写进日志。
 ## 10. 已知问题
 
 | # | 问题 | 影响 | 现状 |
