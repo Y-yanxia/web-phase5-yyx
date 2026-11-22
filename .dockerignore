@@ -1,0 +1,13 @@
+node_modules
+npm-debug.log*
+data
+docs
+tests
+scripts
+.cache
+.npm-cache
+.git
+.github
+*.md
+.env
+.env.*
