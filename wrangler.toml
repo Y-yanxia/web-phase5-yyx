@@ -1,0 +1,22 @@
+# Cloudflare Worker 部署配置
+# 部署：npx wrangler deploy
+# 数据库：npx wrangler d1 execute onelist --remote --file=worker/schema.sql
+
+name = "onelist-api"
+main = "worker/index.js"
+compatibility_date = "2025-01-01"
+
+# 免费额度：每天 10 万次请求，个人项目完全够用
+[vars]
+ALLOWED_ORIGINS = "https://y-yanxia.github.io"
+HISTORY_LIMIT = "8"
+DEEPSEEK_MODEL = "deepseek-chat"
+
+# D1 数据库绑定（database_id 在创建 D1 后由 wrangler 回填）
+[[d1_databases]]
+binding = "DB"
+database_name = "onelist"
+database_id = "REPLACE_WITH_D1_ID"
+
+# 可选：给 Worker 绑自定义域名（需要域名托管在 Cloudflare）
+# routes = [{ pattern = "api.example.com/*", custom_domain = true }]

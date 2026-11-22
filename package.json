@@ -13,6 +13,9 @@
     "test": "node tests/api.test.js && node tests/tools.test.js",
     "seed": "node scripts/seed.mjs",
     "smoke": "node scripts/smoke.mjs",
+    "worker:dev": "wrangler dev",
+    "worker:deploy": "wrangler deploy",
+    "db:init": "wrangler d1 execute onelist --remote --file=worker/schema.sql",
     "e2e": "node scripts/e2e.mjs",
     "shots": "node scripts/screenshots.mjs",
     "shots:terminal": "node scripts/render-terminal.mjs docs/evidence/api-smoke.txt docs/evidence/09-api-smoke.png"
