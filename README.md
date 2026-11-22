@@ -12,7 +12,7 @@
 |---|---|
 | 仓库 | https://github.com/Y-yanxia/web-phase5-yyx |
 | 线上页面 | https://y-yanxia.github.io/web-phase5-yyx/ （GitHub Pages） |
-| 线上接口 | `https://readings-disclose-assisted-experiment.trycloudflare.com` （Cloudflare 隧道，**临时**，见下方说明） |
+| 线上接口 | `https://snake-heaven-graphics-jerusalem.trycloudflare.com` （Cloudflare 隧道，**临时**，见下方说明） |
 | 本地 | http://localhost:3000 |
 
 > ⚠️ **当前线上组合是「Pages 前端 + Cloudflare 隧道后端」**：功能完整可用（`npm run e2e` 对着线上跑过 9/9），
@@ -306,6 +306,13 @@ docker run -d --name onelist -p 3000:3000 \
 
 ---
 
+### 9.4 其他已经备好的部署方式
+
+| 方式 | 状态 | 说明 |
+|---|---|---|
+| 容器镜像（ghcr / 阿里云 ACR） | ✅ 已构建并推到两处 | 任何装了 Docker 的机器一条命令；`docs/deploy.md` 方案 D |
+| 阿里云函数计算 FC | ✅ 已实测跑通（接口/CORS/400 全过） | **实例回收会清空 SQLite**；要持久必须挂 NAS，见 `docs/deploy.md` 方案 E |
+| Cloudflare Workers + D1 | 🟡 代码就绪，待部署 | 免费、地址固定、数据持久；见 [`docs/worker.md`](docs/worker.md) |
 ## 10. 已知问题
 
 | # | 问题 | 影响 | 现状 |
