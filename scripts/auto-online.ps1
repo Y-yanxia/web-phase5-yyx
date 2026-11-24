@@ -129,6 +129,25 @@ while ($true) {
         Write-Log '没拿到隧道地址，10 秒后重试'
     }
 
+    # 常驻监控：quick tunnel 可能被云端清理（日志出现 Tunnel not found），
+    # 但进程不一定退出，所以这里主动看门狗，连续两次异常就重启隧道。
+    $bad = 0
+    while (-not $proc.HasExited) {
+        Start-Sleep -Seconds 60
+        $tail = Get-Content $cfLog -Tail 20 -ErrorAction SilentlyContinue
+        if (($tail -join "`n") -match 'Tunnel not found') {
+            $bad++
+            Write-Log "隧道异常（Tunnel not found）第 $bad 次"
+            if ($bad -ge 2) {
+                Write-Log '主动重启隧道'
+                try { $proc.Kill() } catch { }
+                break
+            }
+        } else {
+            $bad = 0
+        }
+    }
+
     if (-not $proc.HasExited) { $proc.WaitForExit() }
     Write-Log '隧道退出，5 秒后重启'
     Start-Sleep -Seconds 5
