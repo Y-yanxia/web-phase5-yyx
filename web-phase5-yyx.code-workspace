@@ -1,0 +1,153 @@
+{
+  // ===========================================================================
+  //  一句话清单 · VS Code 工作区
+  //  用法：双击本文件用 VS Code 打开（或在 VS Code 里 File → Open Workspace）
+  //  打开后：Ctrl+Shift+B 看任务，F5 直接调试服务端
+  // ===========================================================================
+
+  "folders": [
+    {
+      // 项目根目录。代码分四块：
+      //   public/  前端（原生 HTML/CSS/JS，浏览器直接跑）
+      //   server/  后端（Node + Express + SQLite）
+      //   worker/  另一个后端实现（Cloudflare Workers + D1，可选部署路线）
+      //   scripts/ 开发辅助（测试、截图、部署、恢复线上）
+      "path": "."
+    }
+  ],
+
+  "settings": {
+    // 中文注释和中文文案都是 UTF-8，统一编码能避免乱码
+    "files.encoding": "utf8",
+    "files.eol": "\n",
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true,
+
+    // 这些目录不进搜索、不进资源管理器，减少干扰
+    "files.exclude": {
+      "**/node_modules": true,
+      "**/.cache": true,
+      "**/.npm-cache": true,
+      "**/data/*.db*": true
+    },
+    "search.exclude": {
+      "**/node_modules": true,
+      "**/.cache": true,
+      "**/docs/evidence": true,
+      "**/package-lock.json": true
+    },
+
+    "editor.rulers": [100],
+    "editor.tabSize": 2,
+    "editor.formatOnSave": false,
+
+    // 证据目录里是截图，别让编辑器去解析
+    "files.associations": {
+      "*.sql": "sql",
+      "*.ps1": "powershell"
+    },
+
+    "explorer.fileNesting.enabled": true,
+    "explorer.fileNesting.patterns": {
+      "package.json": "package-lock.json, .env.example, .gitignore, .gitattributes, .dockerignore",
+      "README.md": "Dockerfile, docker-compose.yml, wrangler.toml, render.yaml"
+    }
+  },
+
+  // ===========================================================================
+  //  任务（Ctrl+Shift+B 或 Terminal → Run Task）
+  // ===========================================================================
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        // 本地开发主入口：起 Express 服务（.env 里 PORT=3100）
+        "label": "① 启动服务（npm start）",
+        "type": "shell",
+        "command": "npm start",
+        "isBackground": true,
+        "problemMatcher": [],
+        "group": { "kind": "build", "isDefault": true },
+        "presentation": { "panel": "dedicated", "clear": true }
+      },
+      {
+        // 24 条自动化测试：16 条接口 + 8 条工具执行器（跑内存库，不污染 data/app.db）
+        "label": "② 跑测试（npm test）",
+        "type": "shell",
+        "command": "npm test",
+        "problemMatcher": [],
+        "presentation": { "panel": "dedicated", "clear": true }
+      },
+      {
+        // 打 11 条真实 HTTP 请求，输出状态码/耗时表格（任务书任务2 的验收动作）
+        "label": "③ 接口冒烟（npm run smoke）",
+        "type": "shell",
+        "command": "npm run smoke",
+        "problemMatcher": []
+      },
+      {
+        // 真浏览器点一遍：新增→勾选→搜索→AI 加一条→删除→320px→Console 无报错
+        "label": "④ 端到端 E2E（npm run e2e）",
+        "type": "shell",
+        "command": "npm run e2e",
+        "problemMatcher": []
+      },
+      {
+        // 无头 Edge 截全部证据图到 docs/evidence/（需要服务已启动）
+        "label": "⑤ 重新截图（npm run shots）",
+        "type": "shell",
+        "command": "npm run shots",
+        "problemMatcher": []
+      },
+      {
+        // 灌 6 条演示数据到本地库
+        "label": "⑥ 灌演示数据（npm run seed）",
+        "type": "shell",
+        "command": "npm run seed",
+        "problemMatcher": []
+      },
+      {
+        // 起本地 + 隧道 + 自动改 API_BASE 并重跑 Pages（恢复线上用）
+        "label": "⑦ 恢复线上（start-online）",
+        "type": "shell",
+        "command": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/start-online.ps1",
+        "problemMatcher": []
+      }
+    ]
+  },
+
+  // ===========================================================================
+  //  调试配置（F5）
+  // ===========================================================================
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        // 直接调试后端：断点打 server/**/*.js 里
+        "name": "调试服务端",
+        "type": "node",
+        "request": "launch",
+        "program": "${workspaceFolder}/server/index.js",
+        "cwd": "${workspaceFolder}",
+        "env": { "PORT": "3100" },
+        "console": "integratedTerminal",
+        "skipFiles": ["<node_internals>/**"]
+      },
+      {
+        // 调试当前打开的脚本（比如 scripts/smoke.mjs）
+        "name": "调试当前文件",
+        "type": "node",
+        "request": "launch",
+        "program": "${file}",
+        "cwd": "${workspaceFolder}",
+        "console": "integratedTerminal",
+        "skipFiles": ["<node_internals>/**"]
+      }
+    ]
+  },
+
+  "extensions": {
+    // 建议装的扩展（不影响运行，只是舒服一点）
+    "recommendations": ["dbaeumer.vscode-eslint", "esbenp.prettier-vscode", "humao.rest-client"]
+  }
+}
