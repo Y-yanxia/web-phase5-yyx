@@ -256,5 +256,93 @@ for line in [
     r = p.add_run(line)
     set_font(r, size=10)
 
+# ============================================================
+# 附录：逐文件作用
+# ============================================================
+doc.add_page_break()
+h1("附录：每个文件是干什么的")
+
+para("public/ — 前端（浏览器直接跑）", size=11, bold=True, color=ACCENT)
+table(
+    ["文件", "作用"],
+    [
+        ["`index.html`", "页面骨架：头部、两个 Tab、清单面板、AI 面板、页脚"],
+        ["`style.css`", "全部样式：设计变量、组件样式、375px 适配"],
+        ["`app.js`", "全部交互：状态管理、渲染、fetch、SSE 流式、工具卡片"],
+        ["`config.js`", "API 地址配置（本地同源；部署时被 Actions 注入线上地址）"],
+        ["`404.html`", "真 404 页（服务端返回 404 状态码，不是软跳转）"],
+    ],
+    widths=[4.6, 11.4],
+)
+
+para("server/ — 后端", size=11, bold=True, color=ACCENT)
+table(
+    ["文件", "作用"],
+    [
+        ["`index.js`", "进程入口：监听端口、打印启动信息、优雅退出"],
+        ["`app.js`", "中间件流水线：CORS → JSON → 日志 → 路由 → 静态 → 404 → 错误兜底"],
+        ["`config.js`", "配置中心：唯一读 .env / 环境变量的地方"],
+        ["`db.js`", "数据层：建表、WAL、预编译语句，所有 SQL 都在这"],
+        ["`lib/http.js`", "统一返回 ok/fail、asyncHandler、手写 CORS 中间件"],
+        ["`lib/errors.js`", "业务错误类型（带状态码与业务码）"],
+        ["`routes/items.js`", "清单 CRUD + 四个参数校验函数"],
+        ["`routes/chat.js`", "SSE 对话入口：响应头、心跳、断开感知、错误事件"],
+        ["`ai/deepseek.js`", "调 DeepSeek、解析上游流、把错误翻译成人话"],
+        ["`ai/agent.js`", "会话上下文 + 两轮工具循环（liveAgent）+ 无 Key 时的 mock"],
+        ["`ai/tools.js`", "三个工具的 JSON Schema + 唯一真正改库的执行器"],
+    ],
+    widths=[4.6, 11.4],
+)
+
+para("worker/ — 另一套后端（Cloudflare Workers + D1）", size=11, bold=True, color=ACCENT)
+table(
+    ["文件", "作用"],
+    [
+        ["`index.js`", "Worker 路由入口：手写路由、CORS、参数校验（与 Express 版同语义）"],
+        ["`db.js`", "D1 数据层：全异步 API，多了对话历史表操作"],
+        ["`chat.js`", "Worker 版 SSE（TransformStream）+ 工具循环，历史落 D1"],
+        ["`tools.js`", "Worker 版工具定义与执行器"],
+        ["`schema.sql`", "建 items 与 chat_messages 两张表"],
+    ],
+    widths=[4.6, 11.4],
+)
+
+para("tests/ — 自动化测试", size=11, bold=True, color=ACCENT)
+table(
+    ["文件", "作用"],
+    [
+        ["`api.test.js`", "16 条：创建/校验/更新/删除/404/400/统计/SSE 全链路/多轮上下文"],
+        ["`tools.test.js`", "8 条：工具执行器边界（空标题、未知工具、多条命中、过滤）"],
+    ],
+    widths=[4.6, 11.4],
+)
+
+para("scripts/ — 开发与取证脚本", size=11, bold=True, color=ACCENT)
+table(
+    ["文件", "作用"],
+    [
+        ["`seed.mjs`", "给本地库灌 6 条演示数据"],
+        ["`seed-remote.mjs`", "给任意部署（隧道 / FC）灌数据"],
+        ["`smoke.mjs`", "打 11 条真实 HTTP 请求，输出状态码 / 耗时表"],
+        ["`e2e.mjs`", "真浏览器端到端 9 项（新增/勾选/搜索/AI/删除/320px/无报错）"],
+        ["`screenshots.mjs`", "无头 Edge 截全部证据图（01–08、10）"],
+        ["`render-terminal.mjs`", "把文本渲染成“终端截图”（09 接口表）"],
+        ["`cors-demo.mjs`", "故意制造跨域失败并抓 Console 原文（11/12 对比图）"],
+        ["`static-server.mjs`", "起静态服务器，复现“前后端分域”场景"],
+        ["`live-shot.mjs`", "截线上页面（13 号图）"],
+        ["`live-ai-shot.mjs`", "线上发一句话，截工具调用现场（15 号图）"],
+        ["`live-context-shot.mjs`", "线上连说 4 轮，证明上下文接得上（18 号图）"],
+        ["`accept-task2.ps1`", "任务 2 验收：curl 逐条执行、暂停截图、自动判读"],
+        ["`start-online.ps1`", "手动一键：起服务 + 隧道，打印公网地址"],
+        ["`auto-online.ps1`", "开机自恢复：服务 + 隧道 + 自动改 API_BASE + 重跑 Pages"],
+        ["`set-api-base.mjs`", "用 Node 改仓库变量并触发 Pages（PowerShell 的 HTTPS 在这台机器上是坏的）"],
+    ],
+    widths=[4.6, 11.4],
+)
+
+para("一句话记住它们的关系：", size=10, bold=True, color=MUTED)
+quote("public/ 让用户看得见；server/ 让请求跑得通（app 串路由、routes 校验、db 落库）；"
+      "worker/ 是同一件事的另一种做法；tests/ 保证改了不坏；scripts/ 保证能证明、能恢复。", size=10)
+
 doc.save(OUT)
 print("saved:", OUT)
