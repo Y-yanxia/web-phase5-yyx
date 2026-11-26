@@ -1,20 +1,37 @@
 <!doctype html>
+<!-- ============================================================
+     index.html · 一句话清单的页面骨架（全站唯一一个页面）
+     角色：原生单页。两个 Tab ——「清单」和「AI 助手」—— 都写死在这里，
+           切换靠 hidden 属性显示/隐藏，不跳页也不刷新。
+     配合：style.css 负责外观（下面的 class 名和它是约定，改名等于丢样式）；
+           config.js 先垫好 window.__API_BASE__；
+           app.js 最后按下面的 id 抓节点、绑事件、往容器里填数据。
+     注意：下面所有 id 和 data-* 都是 app.js 的选择器，别随手改。
+     ============================================================ -->
 <html lang="zh-CN">
   <head>
     <meta charset="utf-8" />
+    <!-- viewport-fit=cover 是给 style.css 里页脚的 env(safe-area-inset-bottom) 用的：
+         不加的话，iPhone 底部那条横条会压住页脚最后一行字 -->
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>一句话清单 · 能听懂人话的待办</title>
     <meta name="description" content="一句话清单：原生前端 + Express + SQLite，支持用自然语言增删查改待办事项。" />
     <!-- data: 图标，避免浏览器自动请求 /favicon.ico 在 Console 里留红字 -->
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23e8623c'/%3E%3Cpath d='M9 16.5l4.5 4.5L23 11.5' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+    <!-- 全站唯一样式表：无框架、无构建，改完刷新即生效 -->
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
+    <!-- 键盘 / 读屏用户的快捷入口：按 Tab 第一下它就滑出来，直达 #main，不用挨个跳过头部 -->
     <a class="skip-link" href="#main">跳到主要内容</a>
 
+    <!-- ======================= 头部：品牌 + Tab 切换 ======================= -->
     <header class="site-header">
       <div class="wrap header-inner">
+        <!-- 品牌区，整块是回首页的链接；aria-label 让读屏念「一句话清单首页」，
+             而不是把里面的「✓」和两行字都念一遍 -->
         <a class="brand" href="./" aria-label="一句话清单首页">
+          <!-- 纯装饰的对勾图标，aria-hidden 免得读屏读出一个无意义的字符 -->
           <span class="brand-mark" aria-hidden="true">✓</span>
           <span class="brand-text">
             <strong>一句话清单</strong>
@@ -22,7 +39,11 @@
           </span>
         </a>
 
+        <!-- Tab 组：role="tablist" 告诉读屏「这是一组选项卡」，
+             aria-label 给这组控件起个名字，否则只会念「选项卡」 -->
         <nav class="tabs" role="tablist" aria-label="功能切换">
+          <!-- role="tab" 声明自己是选项卡；aria-selected 是选中态的唯一真相（switchTab 会同步改），
+               aria-controls 指向它控制的面板 id，data-tab 是给 JS 读的稳定标识（改文案不影响逻辑） -->
           <button
             class="tab is-active"
             id="tab-list"
@@ -33,8 +54,10 @@
             data-tab="list"
           >
             清单
+            <!-- 角标显示「未完成」条数（不是全部），由 app.js 的 renderStats() 填 -->
             <span class="tab-badge" id="tabCount">0</span>
           </button>
+          <!-- 第二个 Tab 默认不选中；里面的小圆点是 AI 连接指示灯 -->
           <button
             class="tab"
             id="tab-ai"
@@ -45,20 +68,26 @@
             data-tab="ai"
           >
             AI 助手
+            <!-- 圆点颜色不是写死的：绿 = 真模型在线、黄 = 离线演示、灰 = 后端没连上，
+                 由 app.js 的 loadMeta() 给它加 .is-live / .is-mock -->
             <span class="dot" id="aiDot" aria-hidden="true"></span>
           </button>
         </nav>
       </div>
     </header>
 
+    <!-- 主内容区：两个面板二选一显示，切换逻辑在 app.js 的 switchTab() -->
     <main id="main" class="wrap">
       <!-- ============================ 面板一：清单 ============================ -->
+      <!-- 面板一：清单。role="tabpanel" + aria-labelledby 把它和上面的 tab-list 绑成一对 -->
       <section class="panel is-active" id="panel-list" role="tabpanel" aria-labelledby="tab-list">
+        <!-- 首屏大标题 + 统计条：文案和数字都由 app.js 填（renderStats 会按数量改写下面这句） -->
         <div class="hero">
           <div class="hero-copy">
             <h1>今天要做什么？</h1>
             <p id="heroSub">添加第一条任务，或者切到「AI 助手」直接说一句话。</p>
           </div>
+          <!-- 用 dl/dt/dd 而不是一排 div：语义上就是「名称-数值」的键值对，读屏能念出成对关系 -->
           <dl class="stats" id="stats">
             <div class="stat">
               <dt>全部</dt>
@@ -75,8 +104,11 @@
           </dl>
         </div>
 
+        <!-- 新增表单：novalidate 是为了关掉浏览器自带的提示气泡，
+             改由下面的 #formError 用统一文案报错（样式和别处一致） -->
         <form class="add-form" id="addForm" novalidate>
           <div class="field field-grow">
+            <!-- label 视觉隐藏（sr-only），但读屏仍然念得到；maxlength 取 200，和后端校验对齐 -->
             <label class="sr-only" for="titleInput">任务内容</label>
             <input
               id="titleInput"
@@ -93,10 +125,14 @@
             <input id="dueInput" name="due" type="date" />
           </div>
           <button class="btn btn-primary" type="submit" id="addBtn">添加</button>
+          <!-- 错误提示条：默认 hidden，出错时 app.js 填文案再取消 hidden；
+               role="alert" 让读屏在它出现时立刻念出来 -->
           <p class="form-error" id="formError" role="alert" hidden></p>
         </form>
 
+        <!-- 工具条：左边筛选（data-filter 的值就是 state.filter 的取值），右边搜索框 -->
         <div class="toolbar">
+          <!-- role="group" + aria-label：告诉读屏「这三个按钮是一组筛选」，而不是散落的按钮 -->
           <div class="filters" role="group" aria-label="筛选">
             <button class="chip is-active" type="button" data-filter="all">全部</button>
             <button class="chip" type="button" data-filter="pending">未完成</button>
@@ -108,29 +144,38 @@
           </label>
         </div>
 
+        <!-- 列表容器：li 全部由 app.js 用 innerHTML 生成，
+             点击事件委托挂在这个 ul 上（一条监听管所有条目，含以后新渲染的） -->
         <ul class="list" id="list" aria-label="待办列表"></ul>
 
         <!-- 三态里的 loading / empty / error 都渲染在这里 -->
+        <!-- 三态容器：和上面的 ul 分开，才能只显示其中一种（列表有数据时它是 hidden 的） -->
         <div class="state" id="listState" hidden></div>
       </section>
 
       <!-- ============================ 面板二：AI ============================ -->
+      <!-- 面板二：AI 助手。默认 hidden，点 Tab 才显示；标题下面那行状态文案由 loadMeta() 刷新 -->
       <section class="panel" id="panel-ai" role="tabpanel" aria-labelledby="tab-ai" hidden>
         <div class="chat-shell">
           <header class="chat-head">
             <div>
               <h2>AI 助手</h2>
+              <!-- 这里写「正在连接…」是初始值，真正结果来自 /api/chat/meta -->
               <p class="chat-sub" id="aiModeText">正在连接…</p>
             </div>
             <button class="btn btn-ghost btn-sm" id="resetChat" type="button">清空会话</button>
           </header>
 
+          <!-- 对话区：aria-live="polite" 让新增气泡被读屏自动念出来（不打断当前朗读） -->
           <div class="messages" id="messages" aria-live="polite" aria-label="对话记录">
+            <!-- 预置的欢迎语：写在 HTML 里，省得 JS 启动时再拼一次，也让首屏立刻有内容 -->
             <div class="msg msg-assistant">
               <div class="msg-body">你好，我是清单助手。你可以直接说：「帮我加一条明天交实验报告」，或者问「我还有哪些没做完？」</div>
             </div>
           </div>
 
+          <!-- 工具调用记录：用原生 details 折叠，默认展开（答辩时想让人一眼看到模型调了函数）。
+               里面是 app.js 的 pushDebug() 现场插的 li -->
           <details class="debug" id="debugPanel" open>
             <summary>
               工具调用记录
@@ -141,6 +186,7 @@
             </ol>
           </details>
 
+          <!-- 输入区：textarea 初始只有一行（rows=1），输入时由 autoGrow() 长高，最高 120px -->
           <form class="chat-form" id="chatForm">
             <label class="sr-only" for="chatInput">对助手说</label>
             <textarea
@@ -150,16 +196,22 @@
               placeholder="说一句话，例如：帮我加一条明天交实验报告"
             ></textarea>
             <button class="btn btn-primary" type="submit" id="sendBtn">发送</button>
+            <!-- 「停止生成」平时是 hidden 的，流式回答期间才由 sendMessage() 放出来 -->
             <button class="btn btn-danger" type="button" id="stopBtn" hidden>停止生成</button>
           </form>
+          <!-- 对话错误单独一条，不塞进气泡里：这样历史记录不会被错误文案污染 -->
           <p class="form-error" id="chatError" role="alert" hidden></p>
         </div>
       </section>
     </main>
 
+    <!-- ============================== 页脚 ============================== -->
+    <!-- 页脚：左边的 AI 模式由 loadMeta() 写（真模型 / 离线演示 / 未连接），
+         右边的「健康检查」指向 /api/health，用来快速确认后端活着 -->
     <footer class="site-footer">
       <div class="wrap footer-inner">
         <span id="footMode">—</span>
+        <!-- 分隔点纯装饰，aria-hidden 免得读屏念「点」 -->
         <span class="sep" aria-hidden="true">·</span>
         <span>原生 HTML / CSS / JS + Express + SQLite</span>
         <span class="sep" aria-hidden="true">·</span>
@@ -167,6 +219,8 @@
       </div>
     </footer>
 
+    <!-- 加载顺序不能换：config.js 是普通 script（同步执行），先把 window.__API_BASE__ 放好；
+         app.js 是 module（默认 defer），执行时 DOM 已就绪、配置也已就绪 -->
     <script src="config.js"></script>
     <script type="module" src="app.js"></script>
   </body>

@@ -1,17 +1,32 @@
 // 把纯文本输出渲染成「终端截图」，用于证据包里的接口测试截图。
 // 用法：node scripts/render-terminal.mjs docs/evidence/api-smoke.txt docs/evidence/09-api-smoke.png
+//
+// 为什么要渲成图片：答辩要的是「看得见的证据」，但纯文本截图容易被怀疑是手抄；
+// 同一份文本由脚本渲成终端样式，命令能重跑、状态码有颜色，一眼就能看懂。
+//
+// 用法（默认值就是 npm run shots:terminal 那一套）：
+// node scripts/render-terminal.mjs [输入.txt] [输出.png]
+//
+// 前置条件：不用起服务；只要本机 Edge，和一份已经跑出来的文本；
+// 通常是先 node scripts/smoke.mjs 生成 docs/evidence/api-smoke.txt。
+// 产物：默认是 docs/evidence/09-api-smoke.png
+// 中间 HTML 落在 .cache/terminal.html，方便复查
 import fs from 'node:fs';
 import path from 'node:path';
 import puppeteer from 'puppeteer-core';
 
+// 源文本和输出都给默认值：零参数就能复现文档里的 09 号图
 const src = process.argv[2] || 'docs/evidence/api-smoke.txt';
 const out = process.argv[3] || 'docs/evidence/09-api-smoke.png';
 const EDGE = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';
 
+// 先读文本再渲：两步分开，txt 留着可复查，图随时能重出
 const text = fs.readFileSync(src, 'utf8');
+// 先转义再拼 HTML：接口返回里可能有尖括号，不能被当成标签
 const esc = (s) => s.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]);
 
 // 按状态码上色，读图和读日志一样快
+// 2xx 绿、4xx 黄、5xx 红：评委扫一眼就能定位异常那几条，不用逐行读
 const colored = text
   .split('\n')
   .map((line) => {
@@ -23,6 +38,7 @@ const colored = text
   })
   .join('\n');
 
+// 手搓一个终端窗口：标题栏 + 红黄绿圆点，看起来才像真的命令行截图
 const html = `<!doctype html><meta charset="utf-8">
 <style>
   :root { color-scheme: dark; }
@@ -45,10 +61,12 @@ const html = `<!doctype html><meta charset="utf-8">
   <pre>${colored}</pre>
 </div>`;
 
+// 中间 HTML 落 .cache：能复查，也不进版本库，不污染仓库
 const file = path.resolve('.cache', 'terminal.html');
 fs.mkdirSync(path.dirname(file), { recursive: true });
 fs.writeFileSync(file, html, 'utf8');
 
+// deviceScaleFactor 2：两倍图放大看状态码不糊，放进文档也清楚
 const browser = await puppeteer.launch({
   executablePath: EDGE,
   headless: 'new',
@@ -57,7 +75,9 @@ const browser = await puppeteer.launch({
 });
 try {
   const page = await browser.newPage();
+  // 用 file:// 直开本地 HTML：不用起服务，渲染结果也稳定
   await page.goto('file:///' + file.replace(/\\/g, '/'), { waitUntil: 'load' });
+  // 只截这个窗口元素：不带黑边，插进文档比例正好
   const el = await page.$('.win');
   await el.screenshot({ path: out });
   console.log('已生成', out);

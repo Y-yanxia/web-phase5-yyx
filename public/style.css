@@ -2,6 +2,19 @@
    一句话清单 · 样式
    约束：不用任何框架；375px 宽不能出现横向滚动条。
    做法：全局 border-box + max-width:100% + 禁止 100vw 写法。
+   ------------------------------------------------------------
+   这个文件是什么：全站唯一的样式表，index.html 里 link 进来，
+     没有预处理器、没有构建，改完刷新就生效。
+   在页面里的角色：页面的全部外观都由它决定（结构在 index.html，行为在 app.js）。
+   和谁配合：index.html 给 class / id；app.js 只负责切状态类，
+     比如 .is-active / .is-done / .is-overdue / .is-typing / .is-live，
+     所以这些状态类的名字要一直留着，改了名 JS 就点不亮样式。
+   读法：从上到下是「变量 → 基础 → 头部 → 面板 → 表单 → 列表 → 三态 →
+     聊天 → 页脚 → 小屏」，每段前都有分区注释，按顺序看就行。
+   ------------------------------------------------------------
+   设计变量集中在 :root：换主题只动这一块，不用去几百行里翻颜色。
+   --paper 是页面底色，--card 是卡片/输入框（比底色再白一点，才有层次）；
+   --accent 是品牌橙，--ok 绿和 --danger 红只用在「状态」上，别拿来做装饰。
    ============================================================ */
 
 :root {
@@ -27,16 +40,24 @@
   --mono: "JetBrains Mono", "Cascadia Code", Consolas, "Courier New", monospace;
 }
 
+/* 全局 border-box：width 把 padding 和 border 都算进去。
+   这是「375px 不出横向滚动条」的第一块地基 —— 配合后面的 max-width:100%，
+   带内边距的输入框、卡片才不会被自己的 padding 撑出父容器。 */
 *,
 *::before,
 *::after {
   box-sizing: border-box;
 }
 
+/* 关掉 iOS 横屏时对字号的自动放大，否则同一套断点在手机上会突然变样 */
 html {
   -webkit-text-size-adjust: 100%;
 }
 
+/* body 为什么用 flex + 100dvh：
+   1) 内容少时把页脚推到底部（由 main.wrap 的 flex:1 撑开，见「面板」一节）；
+   2) 用 dvh 而不是 vh，手机地址栏收起/弹出时高度不会跳一下。
+   两个 radial-gradient 只是背景装饰，画在纸面偏暖的角落，不参与布局。 */
 body {
   margin: 0;
   min-height: 100dvh;
@@ -51,12 +72,14 @@ body {
   flex-direction: column;
 }
 
+/* 图片/图标默认不超过容器宽度：往卡片里塞一张大图也不会把 375px 撑破 */
 img,
 svg {
   max-width: 100%;
   display: block;
 }
 
+/* 表单控件默认不继承字体和颜色，这里统一回继承，否则 input 会突然变 13px 宋体 */
 button,
 input,
 textarea {
@@ -68,6 +91,8 @@ a {
   color: var(--accent-dark);
 }
 
+/* 视觉隐藏但读屏仍读得到：不能用 display:none，那样辅助技术也拿不到这段文字。
+   用 1px + clip 的老写法，比 clip-path 的兼容性更稳。 */
 .sr-only {
   position: absolute;
   width: 1px;
@@ -81,10 +106,16 @@ a {
 }
 
 /* .btn 等类自带 display，会盖掉 hidden 属性；这里强制 hidden 生效 */
+/* 为什么非要 !important：浏览器确实给 [hidden] 加了 display:none，
+   但那是「浏览器默认样式」，作者写的 .btn { display: inline-flex } 就能盖住它
+   （跟选择器权重无关，是样式来源的优先级）。加上 !important 之后，
+   JS 里 el.hidden = true / false 才是唯一真相，#stopBtn 也才能真的藏住。 */
 [hidden] {
   display: none !important;
 }
 
+/* 跳转链接平时藏在视口上方，键盘聚焦到它才滑下来（top:0），
+   这样鼠标用户看不到它，键盘用户第一下 Tab 就能跳过头部 */
 .skip-link {
   position: absolute;
   left: 12px;
@@ -101,6 +132,9 @@ a {
   top: 0;
 }
 
+/* 内容栏：max-width 900 + 左右 padding 20。
+   故意不写 width:100vw —— vw 把滚动条宽度也算了进去，桌面上会横向溢出，
+   那正是很多页面莫名多出一条横向滚动条的原因。 */
 .wrap {
   width: 100%;
   max-width: 900px;
@@ -110,6 +144,8 @@ a {
 
 /* ------------------------------ 顶部 ------------------------------ */
 
+/* sticky + 半透明磨砂：滚动时头部不占太多高度，Tab 又始终能点；
+   backdrop-filter 让下面的内容透一点出来，比纯色条更轻。 */
 .site-header {
   position: sticky;
   top: 0;
@@ -127,6 +163,8 @@ a {
   min-height: 68px;
 }
 
+/* min-width:0 是 flex 的经典坑：flex 子项默认 min-width:auto（内容有多宽就多宽），
+   不写这行，长标题不会显示省略号，而是把整行连同 Tab 一起撑宽，最后横向溢出。 */
 .brand {
   display: flex;
   align-items: center;
@@ -136,6 +174,7 @@ a {
   min-width: 0;
 }
 
+/* flex:none 让图标保持 34×34，别被旁边的文字挤扁 */
 .brand-mark {
   flex: none;
   width: 34px;
@@ -149,6 +188,7 @@ a {
   box-shadow: var(--shadow-sm);
 }
 
+/* 两行文字竖排；min-width:0 配合下面的 ellipsis，空间不够时省略而不是撑破布局 */
 .brand-text {
   display: flex;
   flex-direction: column;
@@ -161,6 +201,7 @@ a {
   letter-spacing: 0.02em;
 }
 
+/* 副标题单行 + 省略号：375px 下品牌名和 Tab 抢宽度，这里必须能被截断 */
 .brand-text small {
   color: var(--muted);
   font-size: 12px;
@@ -169,6 +210,8 @@ a {
   text-overflow: ellipsis;
 }
 
+/* Tab 容器做成一整个胶囊：border-radius:999px 比写死半径稳，
+   以后高度变了也不会露出直角。flex:none 防止它被品牌区压缩。 */
 .tabs {
   display: flex;
   gap: 4px;
@@ -198,11 +241,14 @@ a {
   background: var(--accent-wash);
 }
 
+/* 选中态用深色实底，比只改文字颜色更容易一眼看出「现在在哪个 Tab」 */
 .tab.is-active {
   background: var(--ink);
   color: #fff;
 }
 
+/* 角标显示「未完成」数量（由 app.js 的 renderStats 填），
+   min-width 保证 0 和 12 不会让胶囊忽宽忽窄 */
 .tab-badge {
   min-width: 20px;
   padding: 0 6px;
@@ -219,6 +265,7 @@ a {
   background: var(--accent);
 }
 
+/* AI 指示灯：尺寸小、只靠颜色表达信息，所以旁边不加文字 */
 .dot {
   width: 6px;
   height: 6px;
@@ -228,6 +275,7 @@ a {
 }
 
 /* 绿色 = 真模型在线；黄色 = 离线演示；灰色 = 后端没连上 */
+/* 这三个状态类由 app.js 的 loadMeta() 按后端返回的 mode 加上去 */
 .dot.is-live {
   background: var(--ok);
 }
@@ -238,16 +286,20 @@ a {
 
 /* ------------------------------ 面板 ------------------------------ */
 
+/* main 用 flex:1 吃掉剩余高度，页脚才会贴在视口底部而不是浮在半空 */
 main.wrap {
   flex: 1 0 auto;
   padding-top: 28px;
   padding-bottom: 40px;
 }
 
+/* 严格说上面那条 [hidden]!important 已经管住了；留着这行是为了在「面板」这一节
+   就能直接看出「切换靠 hidden 属性」，找代码时不用回顶部 */
 .panel[hidden] {
   display: none;
 }
 
+/* 标题和统计条同一行，窄了就换行（flex-wrap）；align-items:flex-end 让统计条底边对齐标题 */
 .hero {
   display: flex;
   align-items: flex-end;
@@ -257,6 +309,8 @@ main.wrap {
   flex-wrap: wrap;
 }
 
+/* clamp 而不是纯 vw：只写 4.6vw 在 375px 下只有 ~17px，标题会显得塌；
+   下限 22px 保证手机上仍然像个标题，30px 封顶避免大屏上过于夸张 */
 .hero h1 {
   margin: 0 0 6px;
   font-size: clamp(22px, 4.6vw, 30px);
@@ -276,6 +330,8 @@ main.wrap {
   margin: 0;
 }
 
+/* min-width:74 让三个方块宽度接近，数字变化时不会左右跳；
+   tabular-nums 让每个数字等宽，刷新时不会「抖」一下 */
 .stat {
   min-width: 74px;
   padding: 8px 14px;
@@ -300,6 +356,9 @@ main.wrap {
 
 /* ------------------------------ 表单 ------------------------------ */
 
+/* 一行放三个控件：输入框 + 日期 + 按钮。flex-wrap 是关键 ——
+   宽度不够就换行，而不是硬挤成一条横向溢出。
+   阴影比卡片重一点，让「能输入的区域」浮在列表上方。 */
 .add-form {
   display: flex;
   gap: 10px;
@@ -313,18 +372,24 @@ main.wrap {
   margin-bottom: 18px;
 }
 
+/* 同样的 flex 坑：不写 min-width:0，input 的固有宽度（约 20 字符）会当最小值，
+   把整个表单撑得比屏幕还宽 */
 .field {
   min-width: 0;
 }
 
+/* 主输入框：能长到 260px 才换行，太窄的话日期和按钮会被挤到第二行 */
 .field-grow {
   flex: 1 1 260px;
 }
 
+/* 日期框给个偏小的基准，手机上才有位置留给输入框 */
 .field-date {
   flex: 0 1 150px;
 }
 
+/* 三个输入控件共用一套外观：宽 100% 撑满各自容器，focus 才变色。
+   width:100% 配合父级 min-width:0，375px 下才不会溢出。 */
 .add-form input,
 .search input,
 .chat-form textarea {
@@ -338,6 +403,8 @@ main.wrap {
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
+/* 用「变边框色 + 一圈淡色阴影」代替浏览器默认 outline，
+   既看得出焦点，又不会因为 outline 让布局挤一下 */
 .add-form input:focus,
 .search input:focus,
 .chat-form textarea:focus {
@@ -349,6 +416,9 @@ main.wrap {
   color: var(--ink-soft);
 }
 
+/* .btn 用 inline-flex：图标+文字能垂直居中。
+   注意这个 display 会盖掉 [hidden]，所以文件顶部那条规则必须带 !important。
+   white-space:nowrap 是怕「停止生成」这种四字按钮在小屏被折成两行。 */
 .btn {
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
@@ -364,6 +434,7 @@ main.wrap {
   gap: 6px;
 }
 
+/* 按下时下沉 1px，给一个「真的点到了」的触感反馈，比只换颜色更直接 */
 .btn:active {
   transform: translateY(1px);
 }
@@ -394,6 +465,7 @@ main.wrap {
   background: var(--paper);
 }
 
+/* 「停止生成」用危险色，和主按钮拉开距离：一个是继续，一个是中断 */
 .btn-danger {
   background: #fff;
   border-color: #f0c9c2;
@@ -409,6 +481,8 @@ main.wrap {
   font-size: 13px;
 }
 
+/* 错误提示占满整行（flex-basis:100%），另起一行显示，
+   不会把「添加」按钮挤到奇怪的位置 */
 .form-error {
   flex-basis: 100%;
   margin: 0;
@@ -418,6 +492,7 @@ main.wrap {
 
 /* ------------------------------ 工具条 ------------------------------ */
 
+/* 筛选在左、搜索在右；窄屏 wrap 之后搜索会掉到下一行并撑满宽度 */
 .toolbar {
   display: flex;
   align-items: center;
@@ -432,6 +507,8 @@ main.wrap {
   gap: 6px;
 }
 
+/* 胶囊筛选按钮：未选中白底，选中深色实底。
+   data-filter 的取值（all/pending/done）直接对应 app.js 里的 state.filter。 */
 .chip {
   border: 1px solid var(--line);
   background: #fff;
@@ -453,6 +530,7 @@ main.wrap {
   color: #fff;
 }
 
+/* 搜索框限宽 200，min-width:120 保证再窄也不会缩成一个没法点的小块 */
 .search {
   flex: 0 1 200px;
   min-width: 120px;
@@ -465,6 +543,7 @@ main.wrap {
 
 /* ------------------------------ 列表 ------------------------------ */
 
+/* 列表本身只负责排布：gap 控制卡片间距，去掉 ul 的默认缩进和圆点 */
 .list {
   list-style: none;
   margin: 0;
@@ -474,6 +553,8 @@ main.wrap {
   gap: 8px;
 }
 
+/* 卡片：align-items:flex-start 让勾选框和第一行文字对齐（标题可能换行，居中会跑偏）。
+   animation 里的 both 保证动画结束后停在终态，不会闪回去。 */
 .item {
   display: flex;
   align-items: flex-start;
@@ -493,6 +574,7 @@ main.wrap {
   }
 }
 
+/* 已完成整体降噪：底色变灰一点，标题上划线，视线自然先落在未完成的事上 */
 .item.is-done {
   background: #fbfaf7;
 }
@@ -503,6 +585,9 @@ main.wrap {
   text-decoration-color: var(--line-strong);
 }
 
+/* 勾选框其实是个 <button role="checkbox">：外观全靠自己画，所以用
+   color:transparent 把「✓」藏起来（而不是 display:none，那样点不到也聚焦不到），
+   勾上之后 .is-done 再把它变白。 */
 .check {
   flex: none;
   width: 22px;
@@ -529,11 +614,15 @@ main.wrap {
   color: #fff;
 }
 
+/* 文本区吃掉剩余宽度；min-width:0 是必须的 —— 否则长标题会把删除按钮顶出屏幕，
+   这是列表里最容易产生横向溢出的地方。 */
 .item-main {
   flex: 1 1 auto;
   min-width: 0;
 }
 
+/* break-word + anywhere 双重保险：中文能换行，超长英文单词、URL、哈希也能断，
+   375px 下不会撑出一条横向滚动条 */
 .item-title {
   margin: 0;
   font-size: 15px;
@@ -541,6 +630,7 @@ main.wrap {
   overflow-wrap: anywhere;
 }
 
+/* 截止日期 / id / 创建时间排一行，放不下就换行 */
 .item-meta {
   margin: 4px 0 0;
   display: flex;
@@ -550,6 +640,8 @@ main.wrap {
   color: var(--muted);
 }
 
+/* 截止日期做成小胶囊；下面三个状态类由 app.js 的 dueLabel() 决定，
+   颜色语义：正常橙、今天黄、逾期红。 */
 .due {
   display: inline-flex;
   align-items: center;
@@ -570,12 +662,14 @@ main.wrap {
   color: #8a6100;
 }
 
+/* 操作按钮固定在右边，flex:none 防止被标题挤扁 */
 .item-actions {
   flex: none;
   display: flex;
   gap: 6px;
 }
 
+/* 图标按钮：line-height:0 去掉文字行高带来的多余高度，图标才能和标题对齐 */
 .icon-btn {
   border: 0;
   background: transparent;
@@ -594,6 +688,8 @@ main.wrap {
 
 /* ------------------------------ 三态 ------------------------------ */
 
+/* loading / empty / error 共用这一个盒子。虚线边框是刻意的：
+   它告诉用户「这里是临时状态，不是一条真实的任务」。 */
 .state {
   padding: 34px 16px;
   text-align: center;
@@ -619,6 +715,8 @@ main.wrap {
 }
 
 /* 静态托管（没有后端）时展示的「怎么跑起来」清单 */
+/* 这段只在 404.html 之外的「没后端」提示里用；左对齐 + 最大宽度，
+   是因为里面有 git clone 这样的命令，居中读起来很别扭 */
 .state .steps {
   max-width: 540px;
   margin: 0 auto 16px;
@@ -633,6 +731,7 @@ main.wrap {
   word-break: break-word;
 }
 
+/* 行内代码块：长命令用 overflow-wrap:anywhere 断行，不然一格就是一条横向溢出 */
 .state code {
   font-family: var(--mono);
   font-size: 12px;
@@ -656,6 +755,8 @@ main.wrap {
   margin: 0;
 }
 
+/* 骨架屏：纯 CSS 画出来的占位条，不加载图片。
+   宽度 400% + 背景渐变 + 移动 background-position，就能做出「微光扫过」的效果。 */
 .skeleton {
   list-style: none;
   margin: 0;
@@ -685,6 +786,8 @@ main.wrap {
 
 /* ------------------------------ 聊天 ------------------------------ */
 
+/* 聊天区整体一张卡：overflow:hidden 是为了让子元素（头部渐变、输入区底色）
+   跟着圆角一起被裁掉，不会从四角漏出来 */
 .chat-shell {
   display: flex;
   flex-direction: column;
@@ -710,12 +813,16 @@ main.wrap {
   font-size: 16px;
 }
 
+/* 「已接入 deepseek-chat」/「离线演示模式」这类状态文案 */
 .chat-sub {
   margin: 2px 0 0;
   font-size: 12px;
   color: var(--muted);
 }
 
+/* 高度用 min(46dvh, 420px) 而不是固定 px：
+   手机上跟着视口走，桌面上封顶 420px，对话再长也只在这个框里滚，
+   不会把整页越拉越长。scroll-behavior:smooth 配合 app.js 的 scrollMessages()。 */
 .messages {
   height: min(46dvh, 420px);
   overflow-y: auto;
@@ -729,6 +836,7 @@ main.wrap {
     #fff;
 }
 
+/* 气泡最多 88% 宽：留出一点空白，才看得出「谁说的」和左右方向（用户靠右） */
 .msg {
   display: flex;
   max-width: 88%;
@@ -738,6 +846,11 @@ main.wrap {
   align-self: flex-end;
 }
 
+/* white-space:pre-wrap 是气泡换行的关键：
+   模型返回的文本里有 \n 和缩进，默认的 normal 会把它们压成空格，
+   代码块和列表就糊成一整段；pre-wrap 既保留换行、又允许自动折行
+   （纯 pre 在 375px 下会直接横向溢出）。
+   再配 word-break / overflow-wrap，超长英文和 URL 也能在气泡内断开。 */
 .msg-body {
   padding: 10px 14px;
   border-radius: 14px;
@@ -747,18 +860,22 @@ main.wrap {
   overflow-wrap: anywhere;
 }
 
+/* 助手气泡用纸色，并把左下角压平（4px），指向它是「说出来的那一方」 */
 .msg-assistant .msg-body {
   background: #f6f3ee;
   border: 1px solid var(--line);
   border-bottom-left-radius: 4px;
 }
 
+/* 用户气泡深色实底，右下角压平，和助手气泡左右对称 */
 .msg-user .msg-body {
   background: var(--ink);
   color: #fff;
   border-bottom-right-radius: 4px;
 }
 
+/* 生成中的闪烁光标用伪元素画，而不是往 textContent 里塞字符：
+   一是不会污染真正收到的文本（复制/清空时不用处理），二是纯装饰不占位。 */
 .msg.is-typing .msg-body::after {
   content: "▍";
   color: var(--accent);
@@ -771,6 +888,7 @@ main.wrap {
   }
 }
 
+/* 出错时整条气泡变红底，和正常回复区分开（文案由 app.js 填） */
 .msg-error .msg-body {
   background: #fdecea;
   border-color: #f3c9c3;
@@ -778,6 +896,10 @@ main.wrap {
 }
 
 /* 工具调用卡片：模型「干了什么」要看得见 */
+/* 等宽字体 + pre-wrap：参数是 JSON，行长且要保留换行。
+   align-self:stretch 让卡片占满整行（不像气泡那样只占 88%）；
+   overflow-x:auto 兜住极端长的参数，滚动条留在卡片内部而不是页面上。
+   左边那条橙色竖线是用来「扫读」的：一眼能看到这里发生过工具调用。 */
 .tool-card {
   margin: 8px 0;
   padding: 10px 12px;
@@ -798,6 +920,7 @@ main.wrap {
   color: var(--accent-dark);
 }
 
+/* 参数和结果各占一行；参数里的长 JSON 断行显示，别把卡片顶宽 */
 .tool-card .tool-line {
   display: block;
   white-space: pre-wrap;
@@ -808,12 +931,16 @@ main.wrap {
   color: var(--ok);
 }
 
+/* 参数都没解析出来 / 执行失败时整张卡转红，和成功的卡一眼可分 */
 .tool-card.is-failed {
   border-left-color: var(--danger);
   background: #fdf3f1;
 }
 
 /* 调试面板 */
+/* 用原生 details/summary：零 JS 就能折叠，键盘也能操作。
+   list-style:none + 隐藏 ::-webkit-details-marker 是为了去掉各家浏览器
+   长得不一样的默认三角，改用下面的 ::before 自己画一个。 */
 .debug {
   border-top: 1px solid var(--line);
   background: #fbf9f5;
@@ -843,6 +970,7 @@ main.wrap {
   transition: transform 0.15s ease;
 }
 
+/* 展开时把 ▸ 转 90° 变成 ▾，比换字符更平滑 */
 .debug[open] > summary::before {
   transform: rotate(90deg);
 }
@@ -853,6 +981,7 @@ main.wrap {
   font-size: 12px;
 }
 
+/* 调用记录可能有几十条，限高 160px 内部滚动，不把聊天框往下顶 */
 .debug-list {
   margin: 0;
   padding: 0 16px 12px;
@@ -885,6 +1014,7 @@ main.wrap {
 }
 
 /* 输入区 */
+/* align-items:flex-end 让发送按钮始终贴在输入框底边，textarea 长高时不会浮到中间 */
 .chat-form {
   display: flex;
   gap: 8px;
@@ -894,6 +1024,8 @@ main.wrap {
   background: var(--card);
 }
 
+/* 高度由 JS 的 autoGrow() 按内容算（最高 120px，和这里的 max-height 对齐）。
+   resize:none 是必要的：放开拖拽的话，用户拖出来的高度会和 JS 抢控制权。 */
 .chat-form textarea {
   flex: 1 1 auto;
   resize: none;
@@ -903,6 +1035,7 @@ main.wrap {
   padding: 10px 12px;
 }
 
+/* 按钮固定 42px，和 textarea 的 min-height 一致，一行时两者等高 */
 .chat-form .btn {
   height: 42px;
 }
@@ -914,6 +1047,8 @@ main.wrap {
 
 /* ------------------------------ 页脚 ------------------------------ */
 
+/* 底部 padding 加上 env(safe-area-inset-bottom)，iPhone 的横条才不会盖住文字；
+   这依赖 index.html 的 viewport 里写了 viewport-fit=cover。 */
 .site-footer {
   border-top: 1px solid var(--line);
   background: rgb(255 253 250 / 70%);
@@ -935,11 +1070,16 @@ main.wrap {
 
 /* ------------------------------ 小屏 ------------------------------ */
 
+/* 断点为什么是 640：内容栏本身只有 900 宽，640 以下继续「缩小桌面版」
+   只会让表单挤成一条；640 大致是手机横屏 / 小平板的边界，过了这条线就该换排版。
+   这里只做三件事：收窄留白、把并排元素改成整行、把字号/高度压一点。
+   不用 375 / 768 这种「具体机型」宽度，是为了断点少而稳，不是为谁量身定做。 */
 @media (max-width: 640px) {
   .wrap {
     padding: 0 14px;
   }
 
+  /* 头部允许换行：品牌一行、Tab 一行，避免两者硬挤导致品牌名被截没 */
   .header-inner {
     min-height: 56px;
     flex-wrap: wrap;
@@ -947,6 +1087,7 @@ main.wrap {
     gap: 8px;
   }
 
+  /* 小屏藏掉副标题，只留主标题 —— 空间留给 Tab */
   .brand-text small {
     display: none;
   }
@@ -969,6 +1110,7 @@ main.wrap {
     gap: 12px;
   }
 
+  /* 统计条独占一行，三个方块平分宽度（flex:1 1 0 + min-width:0 才能真正平分） */
   .stats {
     width: 100%;
   }
@@ -983,6 +1125,7 @@ main.wrap {
     font-size: 17px;
   }
 
+  /* 新增表单改成竖排：输入框占一整行，日期和按钮再分一行 */
   .field-grow {
     flex: 1 1 100%;
   }
@@ -999,10 +1142,12 @@ main.wrap {
     gap: 8px;
   }
 
+  /* 搜索框整行，避免和筛选按钮挤在一起 */
   .search {
     flex: 1 1 100%;
   }
 
+  /* 手机上聊天区可以再高一点（地址栏会收起来），但仍封顶 420 */
   .messages {
     height: min(52dvh, 420px);
     padding: 12px;
@@ -1012,6 +1157,7 @@ main.wrap {
     max-width: 94%;
   }
 
+  /* 输入框整行，发送/停止按钮在下面平分剩余宽度 */
   .chat-form {
     flex-wrap: wrap;
   }
@@ -1029,6 +1175,9 @@ main.wrap {
   }
 }
 
+/* 尊重系统的「减少动态效果」：前庭敏感的用户开了这个开关后，
+   位移/闪烁类动画会让人不适。用 0.01ms 而不是 none，
+   是为了让 transitionend / animationend 仍然会触发（有些脚本靠它收尾）。 */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

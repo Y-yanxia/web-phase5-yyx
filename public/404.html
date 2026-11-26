@@ -1,18 +1,37 @@
 <!doctype html>
+<!-- ============================================================
+     404.html · 「页面不存在」的兜底页
+     角色：访问了不存在的页面时显示的静态页，只有这一屏内容，没有交互。
+     谁用它：server/app.js 的最后一段兜底 —— 不是 /api、也不是真实文件时，
+             express 会 res.status(404).sendFile() 把这一页发出去（状态码仍是 404，
+             不做「软 404」，否则验收脚本和搜索引擎都会判错）。
+     和谁配合：故意不依赖 style.css / config.js / app.js。
+             404 可能在任意深度的地址上出现，相对路径的样式表很容易再次 404，
+             所以这里把用到的样式全部内联，保证「一个文件就能看」。
+     ============================================================ -->
 <html lang="zh-CN">
   <head>
     <meta charset="utf-8" />
+    <!-- 这页是纯静态的单屏，不需要 viewport-fit=cover（没有贴底元素） -->
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>404 · 页面不存在</title>
+    <!-- 空 data URI：连 favicon 都不去请求，少一个 404，Console 也干净 -->
     <link rel="icon" href="data:," />
+    <!-- 样式内联的原因见文件顶部：这一页要在任何路径、任何部署方式下都能独立显示 -->
     <style>
+      /* 只复制主站用到的几个颜色变量。不 import style.css：
+         404 页追求「零依赖、单文件」，而且也不需要主站那套组件样式。 */
       :root {
         --paper: #f6f3ee;
         --ink: #171a1d;
         --muted: #71767e;
         --accent: #e8623c;
       }
+      /* 和主站一致的 border-box：加 padding 不会把宽度撑出去 */
       * { box-sizing: border-box; }
+      /* grid + place-items:center 一行就能横竖居中，
+         比 flex 的「三件套」短，也不需要额外包一层。
+         padding 24 是给 375px 留边距，min-height 用 dvh 适配手机地址栏。 */
       body {
         margin: 0;
         min-height: 100dvh;
@@ -26,6 +45,8 @@
         color: var(--ink);
         text-align: center;
       }
+      /* 大号 404 是这一页唯一的主角，用 clamp 随视口缩放，
+         下限 64px 保证手机上依然醒目，上限 120px 免得大屏上过分夸张。 */
       .code {
         font-size: clamp(64px, 18vw, 120px);
         line-height: 1;
@@ -36,6 +57,7 @@
       }
       h1 { font-size: 20px; margin: 12px 0 6px; }
       p { color: var(--muted); margin: 0 0 22px; font-size: 14px; }
+      /* 唯一的主要动作做成按钮样子的链接：这里不需要 JS，纯跳转就够 */
       a {
         display: inline-block;
         padding: 10px 20px;
@@ -46,6 +68,7 @@
         font-size: 14px;
       }
       a:hover { background: #000; }
+      /* 行内代码用等宽字体，把 {"code":40400} 这种字样和正文区分开 */
       code {
         font-family: Consolas, monospace;
         background: #fff;
@@ -57,10 +80,15 @@
     </style>
   </head>
   <body>
+    <!-- 整页只有一个 main：大号错误码 + 一句解释 + 回首页的链接 -->
     <main>
       <p class="code">404</p>
       <h1>这个页面不存在</h1>
+      <!-- 特意提一句接口 404 是 JSON：让人分清「页面走丢了」和「接口报错」，
+           那个 code 和后端统一的 { code, msg, data } 包保持一致 -->
       <p>地址可能拼错了。顺带一提：接口不存在时返回的是 JSON <code>{"code":40400}</code>。</p>
+      <!-- 用绝对路径 / 而不是 ./ ：404 可能出现在任意深度的地址下，
+           相对路径会指到「当前目录的子路径」上，再 404 一次 -->
       <a href="/">回到清单</a>
     </main>
   </body>
