@@ -35,6 +35,15 @@ jobs:
             echo "未配置 API_BASE，前端将请求同源 /api（Pages 上没有后端，会显示连接失败提示）"
           fi
 
+          # 给静态资源加版本号：GitHub Pages 的 CDN 有 10 分钟缓存，
+          # 文件名不变就会一直拿旧的 config.js（表现为「改了地址但页面还连老后端」）。
+          # 用提交 SHA 做 query 参数，每次部署都是新 URL，绕开缓存。
+          VER="${{ github.sha }}"
+          sed -i "s|src=\"config.js\"|src=\"config.js?v=${VER}\"|" dist/index.html
+          sed -i "s|href=\"style.css\"|href=\"style.css?v=${VER}\"|" dist/index.html
+          sed -i "s|src=\"app.js\"|src=\"app.js?v=${VER}\"|" dist/index.html
+          echo "已给静态资源加版本号：${VER:0:7}"
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
