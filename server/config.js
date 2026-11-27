@@ -94,6 +94,8 @@ export const config = {
   allowedOrigins: toList(process.env.ALLOWED_ORIGINS, DEV_ORIGINS),
   // 上下文最多留几条消息；Math.max(2,) 保证至少能装下一问一答
   historyLimit: Math.max(2, toInt(process.env.HISTORY_LIMIT, 8)),
+  // 数据库文件放在 NFS（如阿里云 NAS）上时，WAL 可能不可用，用 SQLITE_WAL=0 关掉
+  dbWal: (process.env.SQLITE_WAL ?? '1') !== '0',
   // ?fail=1 是任务3「三态截图」用的开发开关，生产环境关闭
   allowDevFail: nodeEnv !== 'production',
   // 上游 60 秒还不响应就 abort，别让前端一直转圈

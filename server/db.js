@@ -26,8 +26,17 @@ export const db = new DatabaseSync(config.dbFile);
 // busy_timeout：锁冲突最多等 3 秒再报错，别立刻抛 SQLITE_BUSY
 // created_at 存 localtime：前端拿来直接展示，不用再换算时区
 // done 是列表最常用的过滤条件，顺手建个索引（数据量小的时候可有可无）
+//
+// 注意：WAL 依赖共享内存，挂在 NFS（比如阿里云 NAS）上可能不可用。
+// 所以单独用 try/catch 执行，失败就退回默认的 rollback journal，别让服务起不来。
+if (config.dbWal) {
+  try {
+    db.exec('PRAGMA journal_mode = WAL');
+  } catch (err) {
+    console.warn('[db] WAL 不可用，退回默认日志模式：', err.message);
+  }
+}
 db.exec(`
-  PRAGMA journal_mode = WAL;
   PRAGMA busy_timeout = 3000;
   CREATE TABLE IF NOT EXISTS items (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
